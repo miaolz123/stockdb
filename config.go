@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"strings"
 
 	"github.com/go-ini/ini"
@@ -14,7 +15,7 @@ func loadConfig(path string) {
 	}
 	conf, err := ini.Load(path)
 	if err != nil {
-		log(logFatal, "Load config file error:", err)
+		log(logFatal, "Load config file error: ", err)
 	}
 	for _, s := range conf.Sections() {
 		name := s.Name()
@@ -22,4 +23,5 @@ func loadConfig(path string) {
 			config[strings.ToLower(name+"."+k.Name())] = k.Value()
 		}
 	}
+	config["http.auth"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(config["http.auth"]))
 }

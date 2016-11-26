@@ -5,5 +5,6 @@ import (
 )
 
 var (
+	errHTTPUnauthorized     = fmt.Errorf("Unauthorized")
 	errInfluxdbNotConnected = fmt.Errorf("Influxdb is not connected")
 )

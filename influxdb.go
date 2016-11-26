@@ -13,7 +13,7 @@ type influxdb struct {
 }
 
 // newInfluxdb create a Influxdb struct
-func newInfluxdb() *influxdb {
+func newInfluxdb() driver {
 	var err error
 	driver := &influxdb{}
 	driver.client, err = client.NewHTTPClient(client.HTTPConfig{
@@ -22,9 +22,14 @@ func newInfluxdb() *influxdb {
 		Password: config["influxdb.password"],
 	})
 	if err != nil {
-		log(logFatal, "Influxdb connect error:", err)
+		log(logFatal, "Influxdb connect error: ", err)
 	}
-	driver.status = 1
+	if _, _, err := driver.client.Ping(30 * time.Second); err != nil {
+		log(logError, "Influxdb connect error: ", err)
+	} else {
+		driver.status = 1
+		log(logSuccess, "Influxdb connect successfully")
+	}
 	go func(driver *influxdb) {
 		for {
 			if _, _, err := driver.client.Ping(30 * time.Second); err != nil {
@@ -34,25 +39,26 @@ func newInfluxdb() *influxdb {
 			time.Sleep(time.Minute)
 		}
 	}(driver)
-	log(logSuccess, "Influxdb connect successfully")
 	return driver
 }
 
 // reconnect the client
 func (driver *influxdb) reconnect() {
 	for {
+		time.Sleep(10 * time.Minute)
 		var err error
 		if driver.client, err = client.NewHTTPClient(client.HTTPConfig{
 			Addr:     config["influxdb.host"],
 			Username: config["influxdb.username"],
 			Password: config["influxdb.password"],
 		}); err == nil {
-			log(logSuccess, "Influxdb reconnect successfully")
-			driver.status = 1
-			break
+			if _, _, err = driver.client.Ping(30 * time.Second); err == nil {
+				log(logSuccess, "Influxdb reconnect successfully")
+				driver.status = 1
+				break
+			}
 		}
-		log(logError, "Influxdb reconnect error:", err)
-		time.Sleep(5 * time.Minute)
+		log(logError, "Influxdb reconnect error: ", err)
 	}
 }
 
