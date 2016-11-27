@@ -2,9 +2,16 @@ package main
 
 import (
 	"net/http"
+	"reflect"
 
 	"github.com/hprose/hprose-golang/rpc"
 )
+
+type response struct {
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
 
 type hproseEvent struct{}
 
@@ -17,15 +24,31 @@ func server() {
 	service.Event = hproseEvent{}
 	service.AddBeforeFilterHandler(func(request []byte, ctx rpc.Context, next rpc.NextFilterHandler) (response []byte, err error) {
 		httpContext := ctx.(*rpc.HTTPContext)
-		if httpContext == nil || httpContext.Request.Header.Get("Authorization") != config["http.auth"] {
-			httpContext.Response.WriteHeader(http.StatusUnauthorized)
-			httpContext.Response.Header().Set("WWW-Authenticate", "Stockdb Server")
-			return []byte(errHTTPUnauthorized.Error()), errHTTPUnauthorized
+		if httpContext != nil && httpContext.Request.Header.Get("Authorization") == config["http.auth"] {
+			ctx.SetBool("authorized", true)
 		}
 		return next(request, ctx)
 	})
-	// service.AddInstanceMethods(newInfluxdb())
-	if err := http.ListenAndServe(config["http.bind"], service); err != nil {
+	service.AddInvokeHandler(func(name string, args []reflect.Value, ctx rpc.Context, next rpc.NextInvokeHandler) (results []reflect.Value, err error) {
+		if ctx.GetBool("authorized") {
+			return next(name, args, ctx)
+		}
+		resp := response{Message: errHTTPUnauthorized.Error()}
+		results = append(results, reflect.ValueOf(resp))
+		return
+	})
+	service.AddMethods(
+		[]string{
+			"AddMarket",
+			"AddOHLC",
+			"AddOHLCs",
+		},
+		newInfluxdb(),
+		nil,
+	)
+	http.Handle("/", service)
+	http.Handle("/admin/", http.FileServer(http.Dir("")))
+	if err := http.ListenAndServe(config["http.bind"], nil); err != nil {
 		log(logFatal, "Server error: ", err)
 	}
 }

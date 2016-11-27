@@ -4,6 +4,8 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
 	"github.com/influxdata/influxdb/client/v2"
 )
 
@@ -13,7 +15,7 @@ type influxdb struct {
 }
 
 // newInfluxdb create a Influxdb struct
-func newInfluxdb() driver {
+func newInfluxdb() Driver {
 	var err error
 	driver := &influxdb{}
 	driver.client, err = client.NewHTTPClient(client.HTTPConfig{
@@ -77,13 +79,13 @@ func (driver *influxdb) check() error {
 }
 
 // ohlc2BatchPoints parse struct from OHLC to BatchPoints
-func (driver *influxdb) ohlc2BatchPoints(market, symbol string, data []ohlc) (bp client.BatchPoints, err error) {
+func (driver *influxdb) ohlc2BatchPoints(data []ohlc, opt option) (bp client.BatchPoints, err error) {
 	if driver.status < 1 {
 		err = errInfluxdbNotConnected
 		return
 	}
 	bp, err = client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  market,
+		Database:  "market_" + opt.Market,
 		Precision: "s",
 	})
 	if err != nil {
@@ -98,25 +100,16 @@ func (driver *influxdb) ohlc2BatchPoints(market, symbol string, data []ohlc) (bp
 			{"type": "close"},
 		}
 		fields := [4]map[string]interface{}{
-			{
-				"price":  datum.Open,
-				"volume": datum.Volume / 4.0,
-			},
-			{
-				"price":  datum.High,
-				"volume": datum.Volume / 4.0,
-			},
-			{
-				"price":  datum.Low,
-				"volume": datum.Volume / 4.0,
-			},
-			{
-				"price":  datum.Close,
-				"volume": datum.Volume / 4.0,
-			},
+			{"price": datum.Open},
+			{"price": datum.High},
+			{"price": datum.Low},
+			{"price": datum.Close},
 		}
 		for i := 0; i < 4; i++ {
-			pt, err := client.NewPoint(symbol, tags[i], fields[i], time)
+			tags[i]["id"] = fmt.Sprint(opt.Period)
+			fields[i]["period"] = opt.Period
+			fields[i]["amount"] = datum.Volume / 4.0
+			pt, err := client.NewPoint("symbol_"+opt.Symbol, tags[i], fields[i], time)
 			if err != nil {
 				return bp, err
 			}
@@ -133,7 +126,7 @@ func (driver *influxdb) AddMarket(market string) (resp response) {
 		resp.Message = err.Error()
 		return
 	}
-	q := client.NewQuery("CREATE DATABASE "+market, "", "")
+	q := client.NewQuery("CREATE DATABASE market_"+market, "", "")
 	if response, err := driver.client.Query(q); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -148,13 +141,22 @@ func (driver *influxdb) AddMarket(market string) (resp response) {
 }
 
 // AddOHLC add a OHLC record to stockdb
-func (driver *influxdb) AddOHLC(market, symbol string, datum ohlc) (resp response) {
+func (driver *influxdb) AddOHLC(datum ohlc, opt option) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
 		return
 	}
-	bp, err := driver.ohlc2BatchPoints(market, symbol, []ohlc{datum})
+	if opt.Market == "" {
+		opt.Market = defaultOption.Market
+	}
+	if opt.Symbol == "" {
+		opt.Symbol = defaultOption.Symbol
+	}
+	if opt.Period == 0 {
+		opt.Period = defaultOption.Period
+	}
+	bp, err := driver.ohlc2BatchPoints([]ohlc{datum}, opt)
 	if err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -162,9 +164,9 @@ func (driver *influxdb) AddOHLC(market, symbol string, datum ohlc) (resp respons
 	}
 	if err := driver.client.Write(bp); err != nil {
 		if strings.Contains(err.Error(), "database not found") {
-			resp = driver.AddMarket(market)
+			resp = driver.AddMarket(opt.Market)
 			if resp.Success {
-				return driver.AddOHLC(market, symbol, datum)
+				return driver.AddOHLC(datum, opt)
 			}
 			return
 		}
@@ -177,13 +179,22 @@ func (driver *influxdb) AddOHLC(market, symbol string, datum ohlc) (resp respons
 }
 
 // AddOHLC add a OHLC record to stockdb
-func (driver *influxdb) AddOHLCs(market, symbol string, data []ohlc) (resp response) {
+func (driver *influxdb) AddOHLCs(data []ohlc, opt option) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
 		return
 	}
-	bp, err := driver.ohlc2BatchPoints(market, symbol, data)
+	if opt.Market == "" {
+		opt.Market = defaultOption.Market
+	}
+	if opt.Symbol == "" {
+		opt.Symbol = defaultOption.Symbol
+	}
+	if opt.Period == 0 {
+		opt.Period = defaultOption.Period
+	}
+	bp, err := driver.ohlc2BatchPoints(data, opt)
 	if err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -191,9 +202,9 @@ func (driver *influxdb) AddOHLCs(market, symbol string, data []ohlc) (resp respo
 	}
 	if err := driver.client.Write(bp); err != nil {
 		if strings.Contains(err.Error(), "database not found") {
-			resp = driver.AddMarket(market)
+			resp = driver.AddMarket(opt.Market)
 			if resp.Success {
-				return driver.AddOHLCs(market, symbol, data)
+				return driver.AddOHLCs(data, opt)
 			}
 			return
 		}

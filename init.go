@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+
+	"github.com/hprose/hprose-golang/io"
 )
 
 const (
@@ -10,6 +12,10 @@ const (
 )
 
 func init() {
+	io.Register(response{}, "response", "json")
+	io.Register(option{}, "option", "json")
+	io.Register(ticker{}, "ticker", "json")
+	io.Register(ohlc{}, "ohlc", "json")
 	confPath := flag.String("conf", "default.ini", "config file path")
 	flag.Parse()
 	loadConfig(*confPath)

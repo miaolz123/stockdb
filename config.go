@@ -7,7 +7,10 @@ import (
 	"github.com/go-ini/ini"
 )
 
-var config = make(map[string]string)
+var (
+	config        = make(map[string]string)
+	defaultOption = option{}
+)
 
 func loadConfig(path string) {
 	if path == "" {
@@ -17,6 +20,7 @@ func loadConfig(path string) {
 	if err != nil {
 		log(logFatal, "Load config file error: ", err)
 	}
+	conf.Section("default").MapTo(&defaultOption)
 	for _, s := range conf.Sections() {
 		name := s.Name()
 		for _, k := range s.Keys() {
