@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/influxdata/influxdb/client/v2"
+	"github.com/miaolz123/conver"
 	"github.com/miaolz123/stockdb/stockdb"
 )
 
@@ -78,8 +79,8 @@ func (driver *influxdb) check() error {
 	return nil
 }
 
-// ohlc2BatchPoints parse struct from OHLC to BatchPoints
-func (driver *influxdb) ohlc2BatchPoints(data []stockdb.OHLC, opt stockdb.Option) (bp client.BatchPoints, err error) {
+// record2BatchPoints parse struct from OHLC to BatchPoints
+func (driver *influxdb) record2BatchPoints(data []stockdb.OHLC, opt stockdb.Option) (bp client.BatchPoints, err error) {
 	if driver.status < 1 {
 		err = errInfluxdbNotConnected
 		return
@@ -91,8 +92,8 @@ func (driver *influxdb) ohlc2BatchPoints(data []stockdb.OHLC, opt stockdb.Option
 	if err != nil {
 		return
 	}
+	timeOffsets := [4]int64{0, 1, 1, 2}
 	for _, datum := range data {
-		time := time.Unix(datum.Time, 0)
 		tags := [4]map[string]string{
 			{"type": "open"},
 			{"type": "high"},
@@ -109,7 +110,7 @@ func (driver *influxdb) ohlc2BatchPoints(data []stockdb.OHLC, opt stockdb.Option
 			tags[i]["id"] = fmt.Sprint(opt.Period)
 			fields[i]["period"] = opt.Period
 			fields[i]["amount"] = datum.Volume / 4.0
-			pt, err := client.NewPoint("symbol_"+opt.Symbol, tags[i], fields[i], time)
+			pt, err := client.NewPoint("symbol_"+opt.Symbol, tags[i], fields[i], time.Unix(datum.Time+timeOffsets[i], 0))
 			if err != nil {
 				return bp, err
 			}
@@ -119,8 +120,8 @@ func (driver *influxdb) ohlc2BatchPoints(data []stockdb.OHLC, opt stockdb.Option
 	return
 }
 
-// PutMarket create a new market to stockdb
-func (driver *influxdb) PutMarket(market string) (resp response) {
+// putMarket create a new market to stockdb
+func (driver *influxdb) putMarket(market string) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -153,10 +154,10 @@ func (driver *influxdb) PutOHLC(datum stockdb.OHLC, opt stockdb.Option) (resp re
 	if opt.Symbol == "" {
 		opt.Symbol = defaultOption.Symbol
 	}
-	if opt.Period == 0 {
+	if opt.Period < minPeriod {
 		opt.Period = defaultOption.Period
 	}
-	bp, err := driver.ohlc2BatchPoints([]stockdb.OHLC{datum}, opt)
+	bp, err := driver.record2BatchPoints([]stockdb.OHLC{datum}, opt)
 	if err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -164,7 +165,7 @@ func (driver *influxdb) PutOHLC(datum stockdb.OHLC, opt stockdb.Option) (resp re
 	}
 	if err := driver.client.Write(bp); err != nil {
 		if strings.Contains(err.Error(), "database not found") {
-			resp = driver.PutMarket(opt.Market)
+			resp = driver.putMarket(opt.Market)
 			if resp.Success {
 				return driver.PutOHLC(datum, opt)
 			}
@@ -191,10 +192,10 @@ func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp 
 	if opt.Symbol == "" {
 		opt.Symbol = defaultOption.Symbol
 	}
-	if opt.Period == 0 {
+	if opt.Period < minPeriod {
 		opt.Period = defaultOption.Period
 	}
-	bp, err := driver.ohlc2BatchPoints(data, opt)
+	bp, err := driver.record2BatchPoints(data, opt)
 	if err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -202,7 +203,7 @@ func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp 
 	}
 	if err := driver.client.Write(bp); err != nil {
 		if strings.Contains(err.Error(), "database not found") {
-			resp = driver.PutMarket(opt.Market)
+			resp = driver.putMarket(opt.Market)
 			if resp.Success {
 				return driver.PutOHLCs(data, opt)
 			}
@@ -213,6 +214,125 @@ func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp 
 		return
 	}
 	resp.Success = true
+	return
+}
+
+// getTimeRange return the first and the last record time
+func (driver *influxdb) getTimeRange(opt stockdb.Option) (ranges [2]int64) {
+	params := [2]string{"FIRST", "LAST"}
+	for i, param := range params {
+		raw := fmt.Sprintf(`SELECT %v("price") FROM "symbol_%v"`, param, opt.Symbol)
+		q := client.NewQuery(raw, "market_"+opt.Market, "s")
+		if response, err := driver.client.Query(q); err == nil && response.Err == "" && len(response.Results) > 0 {
+			result := response.Results[0]
+			if result.Err == "" && len(result.Series) > 0 && len(result.Series[0].Values) > 0 && len(result.Series[0].Values[0]) > 0 {
+				ranges[i] = conver.Int64Must(result.Series[0].Values[0][0])
+			}
+		}
+	}
+	return
+}
+
+// GetTimeRange return the first and the last record time
+func (driver *influxdb) GetTimeRange(opt stockdb.Option) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	if opt.Market == "" {
+		opt.Market = defaultOption.Market
+	}
+	if opt.Symbol == "" {
+		opt.Symbol = defaultOption.Symbol
+	}
+	resp.Data = driver.getTimeRange(opt)
+	resp.Success = true
+	return
+}
+
+// getOHLCQuery return a query of OHLC
+func (driver *influxdb) getOHLCQuery(opt stockdb.Option) (q client.Query) {
+	ranges := driver.getTimeRange(opt)
+	if opt.EndTime <= 0 || opt.EndTime > ranges[1] {
+		opt.EndTime = ranges[1]
+	}
+	if opt.BeginTime <= 0 {
+		opt.BeginTime = opt.EndTime - 999*opt.Period
+	}
+	if opt.BeginTime < ranges[0] {
+		opt.BeginTime = ranges[0]
+	}
+	raw := fmt.Sprintf(`SELECT FIRST("price"), MAX("price"), MIN("price"),
+		LAST("price"), SUM("amount") FROM "symbol_%v" WHERE "period" <= %v
+		AND time >= %vs AND time < %vs GROUP BY time(%vs)`, opt.Symbol,
+		opt.Period, opt.BeginTime, opt.EndTime, opt.Period)
+	q = client.NewQuery(raw, "market_"+opt.Market, "s")
+	return q
+}
+
+// recordResult2ohlc parse record result to OHLC
+func (driver *influxdb) recordResult2ohlc(result client.Result, opt stockdb.Option) (data []stockdb.OHLC) {
+	if len(result.Series) > 0 {
+		serie := result.Series[0]
+		for i := range serie.Values {
+			if conver.Float64Must(serie.Values[i][3]) <= 0.0 {
+				if opt.InvalidPolicy != "ibid" {
+					continue
+				} else {
+					i--
+				}
+				if i < 0 {
+					continue
+				}
+			}
+			data = append(data, stockdb.OHLC{
+				Time:   conver.Int64Must(serie.Values[i][0]),
+				Open:   conver.Float64Must(serie.Values[i][1]),
+				High:   conver.Float64Must(serie.Values[i][2]),
+				Low:    conver.Float64Must(serie.Values[i][3]),
+				Close:  conver.Float64Must(serie.Values[i][4]),
+				Volume: conver.Float64Must(serie.Values[i][5]),
+			})
+		}
+	}
+	return
+}
+
+// GetOHLC get OHLC records
+func (driver *influxdb) GetOHLCs(opt stockdb.Option) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	if opt.Market == "" {
+		opt.Market = defaultOption.Market
+	}
+	if opt.Symbol == "" {
+		opt.Symbol = defaultOption.Symbol
+	}
+	if opt.Period < minPeriod {
+		opt.Period = defaultOption.Period
+	}
+	if response, err := driver.client.Query(driver.getOHLCQuery(opt)); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	} else if response.Err != "" {
+		log(logError, response.Err)
+		resp.Message = response.Err
+		return
+	} else if len(response.Results) > 0 {
+		result := response.Results[0]
+		if result.Err != "" {
+			log(logError, response.Err)
+			resp.Message = response.Err
+			return
+		}
+		resp.Data = driver.recordResult2ohlc(result, opt)
+		resp.Success = true
+	}
 	return
 }
 

@@ -23,8 +23,10 @@ projects:
     - /
     ignore_paths:
     - vendor
+    - example
     exts:
     - .go
+    - .ini
     preview: false
   cli:
     streams: true

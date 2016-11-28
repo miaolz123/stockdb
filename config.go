@@ -22,6 +22,9 @@ func loadConfig(path string) {
 		log(logFatal, "Load config file error: ", err)
 	}
 	conf.Section("default").MapTo(&defaultOption)
+	if defaultOption.Period < minPeriod {
+		defaultOption.Period = minPeriod
+	}
 	for _, s := range conf.Sections() {
 		name := s.Name()
 		for _, k := range s.Keys() {

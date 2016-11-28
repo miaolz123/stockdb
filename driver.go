@@ -8,7 +8,8 @@ import (
 type Driver interface {
 	close() error
 
-	PutMarket(market string) response
 	PutOHLC(datum stockdb.OHLC, opt stockdb.Option) response
 	PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) response
+	GetTimeRange(opt stockdb.Option) response
+	GetOHLCs(opt stockdb.Option) response
 }

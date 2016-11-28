@@ -37,9 +37,10 @@ func server() {
 	})
 	service.AddMethods(
 		[]string{
-			"PutMarket",
 			"PutOHLC",
 			"PutOHLCs",
+			"GetTimeRange",
+			"GetOHLCs",
 		},
 		newInfluxdb(),
 		nil,

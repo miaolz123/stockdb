@@ -13,10 +13,10 @@ const (
 )
 
 func init() {
-	io.Register(response{}, "response", "json")
-	io.Register(stockdb.Option{}, "option", "json")
-	io.Register(stockdb.Ticker{}, "ticker", "json")
-	io.Register(stockdb.OHLC{}, "ohlc", "json")
+	io.Register(response{}, "Response", "json")
+	io.Register(stockdb.Option{}, "Option", "json")
+	io.Register(stockdb.Ticker{}, "Ticker", "json")
+	io.Register(stockdb.OHLC{}, "OHLC", "json")
 	confPath := flag.String("conf", "stockdb.ini", "config file path")
 	flag.Parse()
 	loadConfig(*confPath)

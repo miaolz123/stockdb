@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/astaxie/beego/httplib"
 	"github.com/miaolz123/conver"
@@ -15,13 +14,8 @@ func main() {
 	if err := req.ToJSON(&records); err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println(181818, time.Now().Unix())
 		cli := stockdb.New("http://localhost:8765", "username:password")
-		opt := stockdb.Option{
-			Market: "okcoin_cn",
-			Symbol: "BTC_CNY",
-			Period: 5 * stockdb.Minute,
-		}
+		opt := stockdb.Option{Period: 5 * stockdb.Minute}
 		for _, record := range records {
 			resp := cli.PutOHLC(stockdb.OHLC{
 				Time:   conver.Int64Must(record[0]) / 1000,
@@ -32,9 +26,8 @@ func main() {
 				Volume: record[5],
 			}, opt)
 			if !resp.Success {
-				fmt.Println(333333, resp.Message)
+				fmt.Println(resp.Message)
 			}
 		}
-		fmt.Println(383838, time.Now().Unix())
 	}
 }
