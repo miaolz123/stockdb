@@ -5,16 +5,17 @@ import (
 	"strings"
 
 	"github.com/go-ini/ini"
+	"github.com/miaolz123/stockdb/stockdb"
 )
 
 var (
 	config        = make(map[string]string)
-	defaultOption = option{}
+	defaultOption = stockdb.Option{}
 )
 
 func loadConfig(path string) {
 	if path == "" {
-		path = "default.ini"
+		path = "stockdb.ini"
 	}
 	conf, err := ini.Load(path)
 	if err != nil {

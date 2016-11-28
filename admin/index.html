@@ -9,7 +9,7 @@
   </head>
   <body>
     <script>
-    var stockdb = hprose.Client.create('http://127.0.0.1:8765', ['AddMarket', 'AddOHLC', 'AddOHLCs']);
+    var stockdb = hprose.Client.create('http://127.0.0.1:8765', ['PutMarket', 'PutOHLC', 'PutOHLCs']);
     var token = new Base64().encode('username:password');
     stockdb.setHeader('Authorization', `Basic ${token}`);
     var record = {
@@ -20,7 +20,7 @@
         close: 5111.2,
         volume: 100
     };
-    stockdb.AddOHLC(record, { period: 60, symbol: 'usd' }, (resp) => {
+    stockdb.PutOHLC(record, { period: 60, symbol: 'usd' }, (resp) => {
       console.log(212121, resp);
     }, (name, err) => {
       console.log(232323, name);

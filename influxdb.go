@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
-	"fmt"
-
 	"github.com/influxdata/influxdb/client/v2"
+	"github.com/miaolz123/stockdb/stockdb"
 )
 
 type influxdb struct {
@@ -79,7 +79,7 @@ func (driver *influxdb) check() error {
 }
 
 // ohlc2BatchPoints parse struct from OHLC to BatchPoints
-func (driver *influxdb) ohlc2BatchPoints(data []ohlc, opt option) (bp client.BatchPoints, err error) {
+func (driver *influxdb) ohlc2BatchPoints(data []stockdb.OHLC, opt stockdb.Option) (bp client.BatchPoints, err error) {
 	if driver.status < 1 {
 		err = errInfluxdbNotConnected
 		return
@@ -119,8 +119,8 @@ func (driver *influxdb) ohlc2BatchPoints(data []ohlc, opt option) (bp client.Bat
 	return
 }
 
-// AddMarket create a new market to stockdb
-func (driver *influxdb) AddMarket(market string) (resp response) {
+// PutMarket create a new market to stockdb
+func (driver *influxdb) PutMarket(market string) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -140,8 +140,8 @@ func (driver *influxdb) AddMarket(market string) (resp response) {
 	return
 }
 
-// AddOHLC add a OHLC record to stockdb
-func (driver *influxdb) AddOHLC(datum ohlc, opt option) (resp response) {
+// PutOHLC add a OHLC record to stockdb
+func (driver *influxdb) PutOHLC(datum stockdb.OHLC, opt stockdb.Option) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -156,7 +156,7 @@ func (driver *influxdb) AddOHLC(datum ohlc, opt option) (resp response) {
 	if opt.Period == 0 {
 		opt.Period = defaultOption.Period
 	}
-	bp, err := driver.ohlc2BatchPoints([]ohlc{datum}, opt)
+	bp, err := driver.ohlc2BatchPoints([]stockdb.OHLC{datum}, opt)
 	if err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -164,9 +164,9 @@ func (driver *influxdb) AddOHLC(datum ohlc, opt option) (resp response) {
 	}
 	if err := driver.client.Write(bp); err != nil {
 		if strings.Contains(err.Error(), "database not found") {
-			resp = driver.AddMarket(opt.Market)
+			resp = driver.PutMarket(opt.Market)
 			if resp.Success {
-				return driver.AddOHLC(datum, opt)
+				return driver.PutOHLC(datum, opt)
 			}
 			return
 		}
@@ -178,8 +178,8 @@ func (driver *influxdb) AddOHLC(datum ohlc, opt option) (resp response) {
 	return
 }
 
-// AddOHLC add a OHLC record to stockdb
-func (driver *influxdb) AddOHLCs(data []ohlc, opt option) (resp response) {
+// PutOHLC add a OHLC record to stockdb
+func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -202,9 +202,9 @@ func (driver *influxdb) AddOHLCs(data []ohlc, opt option) (resp response) {
 	}
 	if err := driver.client.Write(bp); err != nil {
 		if strings.Contains(err.Error(), "database not found") {
-			resp = driver.AddMarket(opt.Market)
+			resp = driver.PutMarket(opt.Market)
 			if resp.Success {
-				return driver.AddOHLCs(data, opt)
+				return driver.PutOHLCs(data, opt)
 			}
 			return
 		}
@@ -217,5 +217,5 @@ func (driver *influxdb) AddOHLCs(data []ohlc, opt option) (resp response) {
 }
 
 /*
-SELECT FIRST("price") AS open, MAX("price") AS high, MIN("price") AS low, LAST("price") AS close, SUM("volume") AS volume FROM "symbol" WHERE price > 0 AND time >= '2016-11-26T14:00:00Z' GROUP BY time(3m)
+SELECT FIRST("price") AS open, MAX("price") AS high, MIN("price") AS low, LAST("price") AS close, SUM("amount") AS volume FROM "symbol_BTC_CNY" WHERE time >= '2016-11-23T14:00:00Z' AND time <= '2016-11-27T14:00:00Z' GROUP BY time(30m)
 */

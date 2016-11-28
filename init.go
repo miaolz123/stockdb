@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hprose/hprose-golang/io"
+	"github.com/miaolz123/stockdb/stockdb"
 )
 
 const (
@@ -13,10 +14,10 @@ const (
 
 func init() {
 	io.Register(response{}, "response", "json")
-	io.Register(option{}, "option", "json")
-	io.Register(ticker{}, "ticker", "json")
-	io.Register(ohlc{}, "ohlc", "json")
-	confPath := flag.String("conf", "default.ini", "config file path")
+	io.Register(stockdb.Option{}, "option", "json")
+	io.Register(stockdb.Ticker{}, "ticker", "json")
+	io.Register(stockdb.OHLC{}, "ohlc", "json")
+	confPath := flag.String("conf", "stockdb.ini", "config file path")
 	flag.Parse()
 	loadConfig(*confPath)
 	log(logInfo, fmt.Sprintf("StockDB Version %s running at %s", version, config["http.bind"]))

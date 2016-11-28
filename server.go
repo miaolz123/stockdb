@@ -13,15 +13,13 @@ type response struct {
 	Data    interface{} `json:"data"`
 }
 
-type hproseEvent struct{}
-
-func (e hproseEvent) OnSendHeader(ctx *rpc.HTTPContext) {
+func (response) OnSendHeader(ctx *rpc.HTTPContext) {
 	ctx.Response.Header().Set("Access-Control-Allow-Headers", "Authorization")
 }
 
 func server() {
 	service := rpc.NewHTTPService()
-	service.Event = hproseEvent{}
+	service.Event = response{}
 	service.AddBeforeFilterHandler(func(request []byte, ctx rpc.Context, next rpc.NextFilterHandler) (response []byte, err error) {
 		httpContext := ctx.(*rpc.HTTPContext)
 		if httpContext != nil && httpContext.Request.Header.Get("Authorization") == config["http.auth"] {
@@ -39,9 +37,9 @@ func server() {
 	})
 	service.AddMethods(
 		[]string{
-			"AddMarket",
-			"AddOHLC",
-			"AddOHLCs",
+			"PutMarket",
+			"PutOHLC",
+			"PutOHLCs",
 		},
 		newInfluxdb(),
 		nil,
