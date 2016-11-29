@@ -1,10 +1,17 @@
-import React, { Component } from 'react';
+import routes from './routes';
+import configureStore from './store/configureStore';
+import React from 'react';
 import { render } from 'react-dom';
+import { Provider } from 'react-redux';
+import { Router, browserHistory } from 'react-router';
+import { syncHistoryWithStore } from 'react-router-redux';
 
-class App extends Component {
-  render() {
-    return <h1>Hello World!</h1>;
-  }
-};
+const store = configureStore();
+const history = syncHistoryWithStore(browserHistory, store);
 
-render(<App />, document.getElementById('react-app'));
+render(
+  <Provider store={store}>
+    <Router history={history} routes={routes} />
+  </Provider>,
+  document.getElementById('react-app')
+);

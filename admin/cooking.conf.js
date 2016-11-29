@@ -29,7 +29,7 @@ cooking.set({
   alias: {
     'src': path.join(__dirname, 'src')
   },
-  extends: ['react', 'lint']
+  extends: ['react', 'lint', 'less']
 });
 
 module.exports = cooking.resolve();
