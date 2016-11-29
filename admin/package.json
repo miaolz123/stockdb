@@ -1,0 +1,28 @@
+{
+  "name": "admin",
+  "version": "0.0.0",
+  "description": "A project.",
+  "private": false,
+  "keywords": [
+    ""
+  ],
+  "scripts": {
+    "dev": "cooking watch -p",
+    "dist": "cooking build -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miaolz123/stockdb.git"
+  },
+  "homepage": "https://github.com/miaolz123/stockdb#readme",
+  "bugs": {
+    "url": "https://github.com/miaolz123/stockdb/issues"
+  },
+  "author": "miaolz123",
+  "license": "MIT",
+  "dependencies": {
+    "react": "15.4.1",
+    "react-dom": "15.4.1",
+    "react-stockcharts": "^0.6.0-beta.9"
+  }
+}
