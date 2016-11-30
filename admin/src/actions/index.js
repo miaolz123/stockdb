@@ -34,7 +34,6 @@ export function getTimeRange(market, symbol) {
 
     client.setHeader('Authorization', `Basic ${token}`);
     client.GetTimeRange(null, (resp) => {
-      console.log(343434, resp);
       if (resp.success) {
         dispatch(getTimeRangeSuccess());
       } else {

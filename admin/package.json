@@ -33,5 +33,8 @@
     "react-stockcharts": "^0.6.0-beta.9",
     "redux": "^3.6.0",
     "redux-thunk": "^2.1.0"
+  },
+  "devDependencies": {
+    "babel-plugin-import": "^1.1.0"
   }
 }
