@@ -4,6 +4,14 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
 class Home extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      innerHeight: window.innerHeight > 500 ? window.innerHeight : 500,
+    };
+  }
+
   componentWillMount() {
     const { dispatch } = this.props;
 
@@ -15,7 +23,7 @@ class Home extends Component {
 
     return (
       <div className="container">
-        {client.data.length > 0 ? <StockChart data={client.data} /> : 'HOME'}
+        {client.data.length > 0 ? <StockChart data={client.data} height={this.state.innerHeight - 100} /> : 'HOME'}
       </div>
     );
   }
