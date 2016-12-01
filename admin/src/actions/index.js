@@ -53,6 +53,41 @@ function getTimeRangeSuccess() {
   return { type: actions.GET_TIME_RANGE_SUCCESS };
 }
 
+// getOHLCs
+export function getOHLCs(market, symbol) {
+  return (dispatch, getState) => {
+    const server = localStorage.getItem('server');
+    const token = localStorage.getItem('token');
+
+    dispatch(getOHLCsRequest());
+    if (!server || !token) {
+      dispatch(logout());
+      return;
+    }
+
+    const client = Client.create(server, ['GetOHLCs']);
+
+    client.setHeader('Authorization', `Basic ${token}`);
+    client.GetOHLCs({ period: 60 * 60 }, (resp) => {
+      if (resp.success) {
+        dispatch(getOHLCsSuccess(resp.data));
+      } else {
+        dispatch(requestFailure(resp.message));
+      }
+    }, (name, err) => {
+      dispatch(requestFailure('Server error'));
+    });
+  };
+}
+
+function getOHLCsRequest() {
+  return { type: actions.GET_OHLCS_REQUEST };
+}
+
+function getOHLCsSuccess(data) {
+  return { type: actions.GET_OHLCS_SUCCESS, data };
+}
+
 // Logout
 export function logout() {
   return { type: actions.LOGOUT };
