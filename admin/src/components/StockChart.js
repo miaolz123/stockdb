@@ -13,7 +13,7 @@ import { fitWidth } from 'react-stockcharts/lib/helper';
 class StockChart extends React.Component {
   render() {
     const { data, height, type, width, ratio } = this.props;
-    const margin = { left: 60, right: 60, top: 10, bottom: 20 };
+    const margin = { left: 60, right: 0, top: 10, bottom: 20 };
     const accessor = d => { d.date = new Date(d.time * 1000); return d; };
     const dateFormat = timeFormat('%Y-%m-%d %H:%M');
     const title = 'OKCOIN.CN(BTC/CNY), HOUR';
@@ -69,14 +69,19 @@ class StockChart extends React.Component {
             ticks={9}
             {...yGrid}
           />
-          <MouseCoordinateY
-            at="right"
-            orient="right"
-            displayFormat={format('.2f')}
-          />
           <CandlestickSeries
             opacity={1}
-            fill={(d) => d.close > d.open ? '#6BA583' : '#D75442'}
+            stroke="#ABAEB7"
+            wickStroke="#ABAEB7"
+            fill={d => d.close > d.open ? '#00CD7A' : '#CD0027'}
+          />
+          <MouseCoordinateY
+            dx={-60}
+            at="right"
+            orient="right"
+            rectWidth={50}
+            arrowWidth={10}
+            displayFormat={format('.2f')}
           />
           <OHLCTooltip
             accessor={accessor}
@@ -99,7 +104,7 @@ class StockChart extends React.Component {
             opacity={0.2}
             stroke={false}
             yAccessor={d => d.volume}
-            fill={(d) => d.close > d.open ? '#6BA583' : '#D75442'}
+            fill={(d) => d.close > d.open ? '#00CD7A' : '#CD0027'}
           />
         </Chart>
         <CrossHairCursor />
