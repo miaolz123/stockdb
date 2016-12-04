@@ -28,7 +28,7 @@ func server() {
 		return next(request, ctx)
 	})
 	service.AddInvokeHandler(func(name string, args []reflect.Value, ctx rpc.Context, next rpc.NextInvokeHandler) (results []reflect.Value, err error) {
-		if ctx.GetBool("authorized") {
+		if openMethods[name] || ctx.GetBool("authorized") {
 			return next(name, args, ctx)
 		}
 		resp := response{Message: errHTTPUnauthorized.Error()}

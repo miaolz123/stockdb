@@ -10,6 +10,7 @@ import (
 
 var (
 	config        = make(map[string]string)
+	openMethods   = make(map[string]bool)
 	defaultOption = stockdb.Option{}
 )
 
@@ -30,6 +31,9 @@ func loadConfig(path string) {
 		for _, k := range s.Keys() {
 			config[strings.ToLower(name+"."+k.Name())] = k.Value()
 		}
+	}
+	for _, m := range strings.Split(config["http.openmethods"], ",") {
+		openMethods[strings.TrimSpace(m)] = true
 	}
 	config["http.auth"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(config["http.auth"]))
 }
