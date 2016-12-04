@@ -22,8 +22,10 @@ projects:
     paths:
     - /
     ignore_paths:
-    - vendor
+    - .git
+    - admin
     - example
+    - vendor
     exts:
     - .go
     - .ini
