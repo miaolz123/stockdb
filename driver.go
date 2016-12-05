@@ -12,4 +12,5 @@ type Driver interface {
 	PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) response
 	GetTimeRange(opt stockdb.Option) response
 	GetOHLCs(opt stockdb.Option) response
+	GetDepth(opt stockdb.Option) response
 }

@@ -10,12 +10,14 @@ import (
 
 func main() {
 	records := [][6]float64{}
-	req := httplib.Get("https://www.okcoin.cn/api/v1/kline.do?symbol=btc_cny&type=5min")
+	req := httplib.Get("https://www.okcoin.cn/api/v1/kline.do?symbol=btc_cny&type=1min&size=300")
 	if err := req.ToJSON(&records); err != nil {
 		fmt.Println(err)
 	} else {
 		cli := stockdb.New("http://localhost:8765", "username:password")
-		opt := stockdb.Option{Period: 5 * stockdb.Minute}
+		opt := stockdb.Option{
+			Period: stockdb.Minute,
+		}
 		for _, record := range records {
 			resp := cli.PutOHLC(stockdb.OHLC{
 				Time:   conver.Int64Must(record[0]) / 1000,

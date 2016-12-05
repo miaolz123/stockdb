@@ -72,8 +72,9 @@ class StockChart extends React.Component {
           <CandlestickSeries
             opacity={1}
             stroke="#ABAEB7"
-            wickStroke="#ABAEB7"
+            candleStrokeWidth={0}
             fill={d => d.close > d.open ? '#00CD7A' : '#CD0027'}
+            wickStroke={d => d.close > d.open ? '#00CD7A' : '#CD0027'}
           />
           <MouseCoordinateY
             dx={-60}

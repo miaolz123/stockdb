@@ -68,7 +68,7 @@ export function getOHLCs(market, symbol) {
     const client = Client.create(server, ['GetOHLCs']);
 
     client.setHeader('Authorization', `Basic ${token}`);
-    client.GetOHLCs({ period: 60 * 60 }, (resp) => {
+    client.GetOHLCs({ period: 10 * 60 }, (resp) => {
       if (resp.success) {
         dispatch(getOHLCsSuccess(resp.data));
       } else {

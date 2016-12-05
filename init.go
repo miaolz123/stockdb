@@ -17,6 +17,8 @@ func init() {
 	io.Register(stockdb.Option{}, "Option", "json")
 	io.Register(stockdb.Ticker{}, "Ticker", "json")
 	io.Register(stockdb.OHLC{}, "OHLC", "json")
+	io.Register(stockdb.OrderBook{}, "OrderBook", "json")
+	io.Register(stockdb.Depth{}, "Depth", "json")
 	confPath := flag.String("conf", "stockdb.ini", "config file path")
 	flag.Parse()
 	loadConfig(*confPath)

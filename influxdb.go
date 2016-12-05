@@ -271,8 +271,8 @@ func (driver *influxdb) getOHLCQuery(opt stockdb.Option) (q client.Query) {
 	return q
 }
 
-// recordResult2ohlc parse record result to OHLC
-func (driver *influxdb) recordResult2ohlc(result client.Result, opt stockdb.Option) (data []stockdb.OHLC) {
+// result2ohlc parse record result to OHLC
+func (driver *influxdb) result2ohlc(result client.Result, opt stockdb.Option) (data []stockdb.OHLC) {
 	if len(result.Series) > 0 {
 		serie := result.Series[0]
 		for i := range serie.Values {
@@ -330,12 +330,104 @@ func (driver *influxdb) GetOHLCs(opt stockdb.Option) (resp response) {
 			resp.Message = response.Err
 			return
 		}
-		resp.Data = driver.recordResult2ohlc(result, opt)
+		resp.Data = driver.result2ohlc(result, opt)
 		resp.Success = true
 	}
 	return
 }
 
-/*
-SELECT FIRST("price") AS open, MAX("price") AS high, MIN("price") AS low, LAST("price") AS close, SUM("amount") AS volume FROM "symbol_BTC_CNY" WHERE time >= '2016-11-23T14:00:00Z' AND time <= '2016-11-27T14:00:00Z' GROUP BY time(30m)
-*/
+// getDepthQuery return a query of market depth
+func (driver *influxdb) getDepthQuery(opt stockdb.Option) (q client.Query) {
+	ranges := driver.getTimeRange(opt)
+	if opt.BeginTime <= 0 || opt.BeginTime > ranges[1] {
+		opt.BeginTime = ranges[1]
+	}
+	raw := fmt.Sprintf(`SELECT price, amount FROM "symbol_%v" WHERE time >= %vs AND
+		time <= %vs LIMIT 300`, opt.Symbol, opt.BeginTime, opt.BeginTime+opt.Period)
+	q = client.NewQuery(raw, "market_"+opt.Market, "s")
+	return q
+}
+
+// result2depth parse result to market depth
+func (driver *influxdb) result2depth(result client.Result, opt stockdb.Option) (data stockdb.Depth) {
+	if len(result.Series) > 0 {
+		serie := result.Series[0]
+		d := struct {
+			open   float64
+			high   float64
+			low    float64
+			dif    float64
+			volume float64
+		}{}
+		for i := range serie.Values {
+			price := conver.Float64Must(serie.Values[i][1])
+			if d.open == 0.0 {
+				d.open = price
+				d.high = price
+				d.low = price
+			}
+			if price > d.high {
+				d.high = price
+			}
+			if price < d.low {
+				d.low = price
+			}
+			d.volume += conver.Float64Must(serie.Values[i][2])
+		}
+		d.dif = d.high - d.low
+		if d.dif > 0.0 {
+			for i := 0; i <= 10; i++ {
+				price := d.low + d.dif/10*conver.Float64Must(i)
+				if i == 0 || price <= d.open {
+					data.Bids = append([]stockdb.OrderBook{{
+						Price:  price,
+						Amount: d.volume / 10.0,
+					}}, data.Bids...)
+				} else if i == 10 || price >= d.open {
+					data.Asks = append(data.Asks, stockdb.OrderBook{
+						Price:  price,
+						Amount: d.volume / 10.0,
+					})
+				}
+			}
+		}
+	}
+	return
+}
+
+// GetDepth get simulated market depth
+func (driver *influxdb) GetDepth(opt stockdb.Option) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	if opt.Market == "" {
+		opt.Market = defaultOption.Market
+	}
+	if opt.Symbol == "" {
+		opt.Symbol = defaultOption.Symbol
+	}
+	if opt.Period < 0 {
+		opt.Period = 0
+	}
+	if response, err := driver.client.Query(driver.getDepthQuery(opt)); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	} else if response.Err != "" {
+		log(logError, response.Err)
+		resp.Message = response.Err
+		return
+	} else if len(response.Results) > 0 {
+		result := response.Results[0]
+		if result.Err != "" {
+			log(logError, response.Err)
+			resp.Message = response.Err
+			return
+		}
+		resp.Data = driver.result2depth(result, opt)
+		resp.Success = true
+	}
+	return
+}

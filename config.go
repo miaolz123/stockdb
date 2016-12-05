@@ -8,10 +8,17 @@ import (
 	"github.com/miaolz123/stockdb/stockdb"
 )
 
+type logConfig struct {
+	Enable  bool `ini:"-"`
+	Console bool `ini:"console"`
+	File    bool `ini:"file"`
+}
+
 var (
 	config        = make(map[string]string)
 	openMethods   = make(map[string]bool)
 	defaultOption = stockdb.Option{}
+	logConf       = logConfig{}
 )
 
 func loadConfig(path string) {
@@ -22,6 +29,8 @@ func loadConfig(path string) {
 	if err != nil {
 		log(logFatal, "Load config file error: ", err)
 	}
+	conf.Section("log").MapTo(&logConf)
+	logConf.Enable = logConf.Console || logConf.File
 	conf.Section("default").MapTo(&defaultOption)
 	if defaultOption.Period < minPeriod {
 		defaultOption.Period = minPeriod

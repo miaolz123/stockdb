@@ -44,6 +44,18 @@ type OHLC struct {
 	Volume float64 `json:"volume"`
 }
 
+// OrderBook struct
+type OrderBook struct {
+	Price  float64 `json:"price"`
+	Amount float64 `json:"amount"`
+}
+
+// Depth struct
+type Depth struct {
+	Bids []OrderBook `json:"bids"`
+	Asks []OrderBook `json:"asks"`
+}
+
 // TimeRangeResponse is TimeRange response struct
 type TimeRangeResponse struct {
 	Success bool     `json:"success"`
@@ -58,6 +70,13 @@ type OHLCResponse struct {
 	Data    []OHLC `json:"data"`
 }
 
+// DepthResponse is market depth response struct
+type DepthResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Data    Depth  `json:"data"`
+}
+
 // Client of StockDB
 type Client struct {
 	uri    string
@@ -68,6 +87,7 @@ type Client struct {
 	PutOHLCs     func(data []OHLC, opt Option) BaseResponse
 	GetTimeRange func(opt Option) TimeRangeResponse
 	GetOHLCs     func(opt Option) OHLCResponse
+	GetDepth     func(opt Option) DepthResponse
 }
 
 // New can create a StockDB Client
@@ -77,6 +97,9 @@ func New(uri, auth string) (client *Client) {
 	io.Register(Ticker{}, "Ticker", "json")
 	io.Register(OHLC{}, "OHLC", "json")
 	io.Register(OHLCResponse{}, "OHLCResponse", "json")
+	io.Register(OrderBook{}, "OrderBook", "json")
+	io.Register(Depth{}, "Depth", "json")
+	io.Register(DepthResponse{}, "DepthResponse", "json")
 	client = &Client{
 		uri:    uri,
 		Hprose: rpc.NewHTTPClient(uri),
