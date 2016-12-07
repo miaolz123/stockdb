@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"net/http"
 
-	"github.com/hprose/hprose-golang/io"
 	"github.com/hprose/hprose-golang/rpc"
 )
 
@@ -16,13 +15,6 @@ type Option struct {
 	BeginTime     int64  `json:"BeginTime" ini:"BeginTime"`
 	EndTime       int64  `json:"EndTime" ini:"EndTime"`
 	InvalidPolicy string `json:"InvalidPolicy" ini:"InvalidPolicy"`
-}
-
-// BaseResponse is base response struct
-type BaseResponse struct {
-	Success bool        `json:"Success"`
-	Message string      `json:"Message"`
-	Data    interface{} `json:"Data"`
 }
 
 // Ticker is an order record struct
@@ -56,6 +48,20 @@ type Depth struct {
 	Asks []OrderBook `json:"Asks"`
 }
 
+// BaseResponse is base response struct
+type BaseResponse struct {
+	Success bool        `json:"Success"`
+	Message string      `json:"Message"`
+	Data    interface{} `json:"Data"`
+}
+
+// StringsResponse is Strings response struct
+type StringsResponse struct {
+	Success bool     `json:"Success"`
+	Message string   `json:"Message"`
+	Data    []string `json:"Data"`
+}
+
 // TimeRangeResponse is TimeRange response struct
 type TimeRangeResponse struct {
 	Success bool     `json:"Success"`
@@ -85,6 +91,8 @@ type Client struct {
 
 	PutOHLC      func(datum OHLC, opt Option) BaseResponse
 	PutOHLCs     func(data []OHLC, opt Option) BaseResponse
+	GetMarkets   func() StringsResponse
+	GetSymbols   func(market string) StringsResponse
 	GetTimeRange func(opt Option) TimeRangeResponse
 	GetOHLCs     func(opt Option) OHLCResponse
 	GetDepth     func(opt Option) DepthResponse
@@ -92,14 +100,6 @@ type Client struct {
 
 // New can create a StockDB Client
 func New(uri, auth string) (client *Client) {
-	io.Register(Option{}, "Option", "json")
-	io.Register(BaseResponse{}, "BaseResponse", "json")
-	io.Register(Ticker{}, "Ticker", "json")
-	io.Register(OHLC{}, "OHLC", "json")
-	io.Register(OHLCResponse{}, "OHLCResponse", "json")
-	io.Register(OrderBook{}, "OrderBook", "json")
-	io.Register(Depth{}, "Depth", "json")
-	io.Register(DepthResponse{}, "DepthResponse", "json")
 	client = &Client{
 		uri:    uri,
 		Hprose: rpc.NewHTTPClient(uri),

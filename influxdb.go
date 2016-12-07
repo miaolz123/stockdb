@@ -233,6 +233,60 @@ func (driver *influxdb) getTimeRange(opt stockdb.Option) (ranges [2]int64) {
 	return
 }
 
+// GetMarkets return the list of market name
+func (driver *influxdb) GetMarkets() (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	data := []string{}
+	q := client.NewQuery("SHOW DATABASES", "", "s")
+	if response, err := driver.client.Query(q); err == nil && response.Err == "" && len(response.Results) > 0 {
+		result := response.Results[0]
+		if result.Err == "" && len(result.Series) > 0 && len(result.Series[0].Values) > 0 {
+			for _, v := range result.Series[0].Values {
+				if len(v) > 0 {
+					name := fmt.Sprint(v[0])
+					if strings.HasPrefix(name, "market_") {
+						data = append(data, strings.TrimPrefix(name, "market_"))
+					}
+				}
+			}
+		}
+	}
+	resp.Data = data
+	resp.Success = true
+	return
+}
+
+// GetSymbols return the list of symbol name
+func (driver *influxdb) GetSymbols(market string) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	data := []string{}
+	q := client.NewQuery("SHOW MEASUREMENTS", "market_"+market, "s")
+	if response, err := driver.client.Query(q); err == nil && response.Err == "" && len(response.Results) > 0 {
+		result := response.Results[0]
+		if result.Err == "" && len(result.Series) > 0 && len(result.Series[0].Values) > 0 {
+			for _, v := range result.Series[0].Values {
+				if len(v) > 0 {
+					name := fmt.Sprint(v[0])
+					if strings.HasPrefix(name, "symbol_") {
+						data = append(data, strings.TrimPrefix(name, "symbol_"))
+					}
+				}
+			}
+		}
+	}
+	resp.Data = data
+	resp.Success = true
+	return
+}
+
 // GetTimeRange return the first and the last record time
 func (driver *influxdb) GetTimeRange(opt stockdb.Option) (resp response) {
 	if err := driver.check(); err != nil {
