@@ -10,71 +10,71 @@ import (
 
 // Option is a request option
 type Option struct {
-	Market        string `json:"market" ini:"market"`
-	Symbol        string `json:"symbol" ini:"symbol"`
-	Period        int64  `json:"period" ini:"period"`
-	BeginTime     int64  `json:"beginTime" ini:"beginTime"`
-	EndTime       int64  `json:"endTime" ini:"endTime"`
-	InvalidPolicy string `json:"invalidPolicy" ini:"invalidPolicy"`
+	Market        string `json:"Market" ini:"Market"`
+	Symbol        string `json:"Symbol" ini:"Symbol"`
+	Period        int64  `json:"Period" ini:"Period"`
+	BeginTime     int64  `json:"BeginTime" ini:"BeginTime"`
+	EndTime       int64  `json:"EndTime" ini:"EndTime"`
+	InvalidPolicy string `json:"InvalidPolicy" ini:"InvalidPolicy"`
 }
 
 // BaseResponse is base response struct
 type BaseResponse struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Success bool        `json:"Success"`
+	Message string      `json:"Message"`
+	Data    interface{} `json:"Data"`
 }
 
 // Ticker is an order record struct
 type Ticker struct {
-	ID     string  `json:"id"`
-	Time   int64   `json:"time"`
-	Price  float64 `json:"price"`
-	Amount float64 `json:"amount"`
-	Type   string  `json:"type"`
+	ID     string  `json:"ID"`
+	Time   int64   `json:"Time"`
+	Price  float64 `json:"Price"`
+	Amount float64 `json:"Amount"`
+	Type   string  `json:"Type"`
 }
 
 // OHLC is a candlestick struct
 type OHLC struct {
-	Time   int64   `json:"time"`
-	Open   float64 `json:"open"`
-	High   float64 `json:"high"`
-	Low    float64 `json:"low"`
-	Close  float64 `json:"close"`
-	Volume float64 `json:"volume"`
+	Time   int64   `json:"Time"`
+	Open   float64 `json:"Open"`
+	High   float64 `json:"High"`
+	Low    float64 `json:"Low"`
+	Close  float64 `json:"Close"`
+	Volume float64 `json:"Volume"`
 }
 
 // OrderBook struct
 type OrderBook struct {
-	Price  float64 `json:"price"`
-	Amount float64 `json:"amount"`
+	Price  float64 `json:"Price"`
+	Amount float64 `json:"Amount"`
 }
 
 // Depth struct
 type Depth struct {
-	Bids []OrderBook `json:"bids"`
-	Asks []OrderBook `json:"asks"`
+	Bids []OrderBook `json:"Bids"`
+	Asks []OrderBook `json:"Asks"`
 }
 
 // TimeRangeResponse is TimeRange response struct
 type TimeRangeResponse struct {
-	Success bool     `json:"success"`
-	Message string   `json:"message"`
-	Data    [2]int64 `json:"data"`
+	Success bool     `json:"Success"`
+	Message string   `json:"Message"`
+	Data    [2]int64 `json:"Data"`
 }
 
 // OHLCResponse is OHLC response struct
 type OHLCResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Data    []OHLC `json:"data"`
+	Success bool   `json:"Success"`
+	Message string `json:"Message"`
+	Data    []OHLC `json:"Data"`
 }
 
 // DepthResponse is market depth response struct
 type DepthResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	Data    Depth  `json:"data"`
+	Success bool   `json:"Success"`
+	Message string `json:"Message"`
+	Data    Depth  `json:"Data"`
 }
 
 // Client of StockDB
