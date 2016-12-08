@@ -10,9 +10,9 @@ import (
 )
 
 type response struct {
-	Success bool        `json:"success"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Success bool        `json:"Success"`
+	Message string      `json:"Message"`
+	Data    interface{} `json:"Data"`
 }
 
 func (response) OnSendHeader(ctx *rpc.HTTPContext) {

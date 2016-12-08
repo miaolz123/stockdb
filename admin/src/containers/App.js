@@ -1,6 +1,6 @@
 import '../styles/app.less';
 import '../styles/app.css';
-import { getTimeRange, logout } from '../actions';
+import { getSymbols, logout } from '../actions';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
@@ -40,7 +40,7 @@ class App extends Component {
       dispatch(logout());
       browserHistory.push('/login');
     } else {
-      dispatch(getTimeRange());
+      dispatch(getSymbols());
     }
   }
 

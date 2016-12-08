@@ -11,12 +11,19 @@ import { XAxis, YAxis } from 'react-stockcharts/lib/axes';
 import { fitWidth } from 'react-stockcharts/lib/helper';
 
 class StockChart extends React.Component {
+  shouldComponentUpdate(nextProps) {
+    const { timeRange } = nextProps;
+
+    console.log(171717, timeRange[0], this.props.timeRange[0]);
+    return timeRange[0] !== this.props.timeRange[0];
+  }
+
   render() {
-    const { data, height, type, width, ratio } = this.props;
+    const { data, symbol, timeRange, height, type, width, ratio } = this.props;
     const margin = { left: 60, right: 0, top: 10, bottom: 20 };
     const accessor = d => { d.date = new Date(d.time * 1000); return d; };
     const dateFormat = timeFormat('%Y-%m-%d %H:%M');
-    const title = 'OKCOIN.CN(BTC/CNY), HOUR';
+    const title = `${symbol[0]}, ${symbol[1]}`;
     const showGrid = true;
     const gridHeight = height - margin.top - margin.bottom;
     const gridWidth = width - margin.left - margin.right;
@@ -32,6 +39,7 @@ class StockChart extends React.Component {
       tickStrokeOpacity: 0.1,
       tickStrokeWidth: 1,
     } : {};
+    console.log('timeRange: ', new Date(timeRange[0] * 1000));
 
     return (
       <ChartCanvas
@@ -44,7 +52,7 @@ class StockChart extends React.Component {
         data={data}
         xAccessor={d => new Date(d.time * 1000)}
         xScaleProvider={discontinuousTimeScaleProvider}
-        xExtents={[new Date(2015, 12, 1), new Date(2016, 12, 30)]}
+        xExtents={[new Date(timeRange[0] * 1000), new Date(timeRange[1] * 1000)]}
       >
         <Label
           fontSize={36}
@@ -116,6 +124,9 @@ class StockChart extends React.Component {
 
 StockChart.propTypes = {
   data: React.PropTypes.array.isRequired,
+  symbol: React.PropTypes.array.isRequired,
+  period: React.PropTypes.number.isRequired,
+  timeRange: React.PropTypes.array.isRequired,
   height: React.PropTypes.number.isRequired,
   width: React.PropTypes.number.isRequired,
   ratio: React.PropTypes.number.isRequired,

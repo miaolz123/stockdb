@@ -329,25 +329,33 @@ func (driver *influxdb) getOHLCQuery(opt stockdb.Option) (q client.Query) {
 func (driver *influxdb) result2ohlc(result client.Result, opt stockdb.Option) (data []stockdb.OHLC) {
 	if len(result.Series) > 0 {
 		serie := result.Series[0]
+		offset := 0
 		for i := range serie.Values {
+			d := stockdb.OHLC{
+				Time:   conver.Int64Must(serie.Values[i][0]),
+				Volume: conver.Float64Must(serie.Values[i][5]),
+			}
 			if conver.Float64Must(serie.Values[i][3]) <= 0.0 {
 				if opt.InvalidPolicy != "ibid" {
 					continue
-				} else {
-					i--
 				}
-				if i < 0 {
+				offset++
+				if i-offset < 0 {
+					offset = 0
 					continue
 				}
+				d.Open = conver.Float64Must(serie.Values[i-offset][4])
+				d.High = conver.Float64Must(serie.Values[i-offset][4])
+				d.Low = conver.Float64Must(serie.Values[i-offset][4])
+				d.Close = conver.Float64Must(serie.Values[i-offset][4])
+			} else {
+				offset = 0
+				d.Open = conver.Float64Must(serie.Values[i][1])
+				d.High = conver.Float64Must(serie.Values[i][2])
+				d.Low = conver.Float64Must(serie.Values[i][3])
+				d.Close = conver.Float64Must(serie.Values[i][4])
 			}
-			data = append(data, stockdb.OHLC{
-				Time:   conver.Int64Must(serie.Values[i][0]),
-				Open:   conver.Float64Must(serie.Values[i][1]),
-				High:   conver.Float64Must(serie.Values[i][2]),
-				Low:    conver.Float64Must(serie.Values[i][3]),
-				Close:  conver.Float64Must(serie.Values[i][4]),
-				Volume: conver.Float64Must(serie.Values[i][5]),
-			})
+			data = append(data, d)
 		}
 	}
 	return

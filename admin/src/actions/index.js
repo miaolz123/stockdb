@@ -1,6 +1,5 @@
 import * as actions from '../constants/actions';
-import { Base64 } from 'js-base64';
-import { Client } from 'hprose-html5/dist/hprose-html5';
+import StockDB from 'stockdb';
 
 // resetError
 export function resetError() {
@@ -9,7 +8,7 @@ export function resetError() {
 
 // login
 export function login(server, username, password) {
-  const token = Base64.encode(`${username}:${password}`);
+  const token = window.btoa(`${username}:${password}`);
   return { type: actions.LOGIN, server, token };
 }
 
@@ -18,8 +17,57 @@ function requestFailure(message) {
   return { type: actions.REQUEST_FAILURE, message };
 }
 
+// getSymbols
+export function getSymbols() {
+  return (dispatch, getState) => {
+    const server = localStorage.getItem('server');
+    const token = localStorage.getItem('token');
+
+    dispatch(getSymbolsRequest());
+    if (!server || !token) {
+      dispatch(logout());
+      return;
+    }
+
+    const client = StockDB.New(server, window.atob(token));
+
+    client.GetMarkets((resp) => {
+      if (resp.Success) {
+        dispatch(getMarketsSuccess(resp.Data));
+        resp.Data.forEach((m, i) => {
+          client.GetSymbols(m, (resp) => {
+            if (resp.Success) {
+              dispatch(getSymbolsSuccess(i, resp.Data));
+            } else {
+              dispatch(requestFailure(resp.Message));
+            }
+          }, (name, err) => {
+            dispatch(requestFailure('Server error'));
+          });
+        });
+      } else {
+        dispatch(requestFailure(resp.Message));
+      }
+    }, (name, err) => {
+      dispatch(requestFailure('Server error'));
+    });
+  };
+}
+
+function getSymbolsRequest() {
+  return { type: actions.GET_SYMBOLS_REQUEST };
+}
+
+function getMarketsSuccess(markets) {
+  return { type: actions.GET_MARKETS_SUCCESS, markets };
+}
+
+function getSymbolsSuccess(index, symbols) {
+  return { type: actions.GET_SYMBOLS_SUCCESS, index, symbols };
+}
+
 // getTimeRange
-export function getTimeRange(market, symbol) {
+function getTimeRange(opt) {
   return (dispatch, getState) => {
     const server = localStorage.getItem('server');
     const token = localStorage.getItem('token');
@@ -30,14 +78,13 @@ export function getTimeRange(market, symbol) {
       return;
     }
 
-    const client = Client.create(server, ['GetTimeRange']);
+    const client = StockDB.New(server, window.atob(token));
 
-    client.setHeader('Authorization', `Basic ${token}`);
-    client.GetTimeRange(null, (resp) => {
-      if (resp.success) {
-        dispatch(getTimeRangeSuccess());
+    client.GetTimeRange(opt, (resp) => {
+      if (resp.Success) {
+        dispatch(getTimeRangeSuccess(resp.Data));
       } else {
-        dispatch(requestFailure(resp.message));
+        dispatch(requestFailure(resp.Message));
       }
     }, (name, err) => {
       dispatch(requestFailure('Server error'));
@@ -49,12 +96,12 @@ function getTimeRangeRequest() {
   return { type: actions.GET_TIME_RANGE_REQUEST };
 }
 
-function getTimeRangeSuccess() {
-  return { type: actions.GET_TIME_RANGE_SUCCESS };
+function getTimeRangeSuccess(timeRange) {
+  return { type: actions.GET_TIME_RANGE_SUCCESS, timeRange };
 }
 
 // getOHLCs
-export function getOHLCs(market, symbol) {
+export function getOHLCs(symbol, period) {
   return (dispatch, getState) => {
     const server = localStorage.getItem('server');
     const token = localStorage.getItem('token');
@@ -65,14 +112,15 @@ export function getOHLCs(market, symbol) {
       return;
     }
 
-    const client = Client.create(server, ['GetOHLCs']);
+    const client = StockDB.New(server, window.atob(token));
+    const opt = { Market: symbol[0], Symbol: symbol[1], Period: period, InvalidPolicy: 'ibid' };
 
-    client.setHeader('Authorization', `Basic ${token}`);
-    client.GetOHLCs({ period: 10 * 60 }, (resp) => {
-      if (resp.success) {
-        dispatch(getOHLCsSuccess(resp.data));
+    client.GetOHLCs(opt, (resp) => {
+      if (resp.Success) {
+        dispatch(getTimeRange(opt));
+        dispatch(getOHLCsSuccess(resp.Data));
       } else {
-        dispatch(requestFailure(resp.message));
+        dispatch(requestFailure(resp.Message));
       }
     }, (name, err) => {
       dispatch(requestFailure('Server error'));

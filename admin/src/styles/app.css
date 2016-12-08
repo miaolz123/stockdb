@@ -111,7 +111,11 @@
 
 .ant-layout-aside .ant-layout-content {
   background: #fff;
-  padding: 16px 24px;
+  margin: 8px 12px;
+}
+
+.ant-card-body {
+  padding: 0;
 }
 
 .ant-layout-aside .ant-layout-footer {
@@ -160,4 +164,12 @@ td .ant-badge-status-with-text {
 
 .CodeMirror.cm-s-eclipse {
   height: 100%;
+}
+
+.chart-header {
+  padding: 12px 18px;
+}
+
+.ant-form-item-control {
+  line-height: 0;
 }
