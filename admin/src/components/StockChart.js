@@ -12,10 +12,13 @@ import { fitWidth } from 'react-stockcharts/lib/helper';
 
 class StockChart extends React.Component {
   shouldComponentUpdate(nextProps) {
-    const { timeRange } = nextProps;
+    const { data, timeRange } = nextProps;
 
-    console.log(171717, timeRange[0], this.props.timeRange[0]);
-    return timeRange[0] !== this.props.timeRange[0];
+    return data.length !== this.props.data.length ||
+      timeRange[0] + timeRange[1] !== this.props.timeRange[0] + this.props.timeRange[1] ||
+      data[0].volume !== this.props.data[0].volume ||
+      data[0].open !== this.props.data[0].open ||
+      data[0].close !== this.props.data[0].close;
   }
 
   render() {
@@ -23,7 +26,6 @@ class StockChart extends React.Component {
     const margin = { left: 60, right: 0, top: 10, bottom: 20 };
     const accessor = d => { d.date = new Date(d.time * 1000); return d; };
     const dateFormat = timeFormat('%Y-%m-%d %H:%M');
-    const title = `${symbol[0]}, ${symbol[1]}`;
     const showGrid = true;
     const gridHeight = height - margin.top - margin.bottom;
     const gridWidth = width - margin.left - margin.right;
@@ -39,7 +41,6 @@ class StockChart extends React.Component {
       tickStrokeOpacity: 0.1,
       tickStrokeWidth: 1,
     } : {};
-    console.log('timeRange: ', new Date(timeRange[0] * 1000));
 
     return (
       <ChartCanvas
@@ -56,14 +57,21 @@ class StockChart extends React.Component {
       >
         <Label
           fontSize={36}
-          text={title}
+          text={symbol[1]}
           opacity={0.2}
           x={() => (width - margin.left - margin.right) / 2}
-          y={() => (height - margin.top - margin.bottom) / 2}
+          y={() => (height - margin.top - margin.bottom) / 2 - 18}
+        />
+        <Label
+          fontSize={30}
+          text={symbol[0]}
+          opacity={0.2}
+          x={() => (width - margin.left - margin.right) / 2}
+          y={() => (height - margin.top - margin.bottom) / 2 + 30}
         />
         <Chart
           id={1}
-          padding={20}
+          padding={30}
           yExtents={[d => [d.high, d.low]]}
         >
           <XAxis
@@ -90,7 +98,7 @@ class StockChart extends React.Component {
             orient="right"
             rectWidth={50}
             arrowWidth={10}
-            displayFormat={format('.2f')}
+            displayFormat={format('.5s')}
           />
           <OHLCTooltip
             accessor={accessor}

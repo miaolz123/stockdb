@@ -2,7 +2,7 @@ import { getOHLCs } from '../actions';
 import StockChart from '../components/StockChart';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Card, Form, Cascader, Radio, Spin } from 'antd';
+import { Card, Row, Col, Cascader, Radio, Spin, Tooltip } from 'antd';
 
 class Home extends Component {
   constructor(props) {
@@ -25,11 +25,12 @@ class Home extends Component {
     const { client } = nextProps;
     const newSymbol = [];
 
-    if (client.symbols.length > 0) {
+    if (this.symbol[0] === '' && client.symbols.length > 0) {
       newSymbol.push(client.symbols[0].value);
       if (client.symbols[0].children.length > 0) {
         newSymbol.push(client.symbols[0].children[0].value);
         this.symbol = newSymbol;
+        this.refresh();
       }
     }
   }
@@ -61,6 +62,7 @@ class Home extends Component {
     const klineAmount = parseInt(innerWidth / 10, 10);
     const { symbol, period } = this;
     const data = [];
+    const displayRender = symbol => `${symbol[1]} @ ${symbol[0]}`;
 
     if (client.data) {
       client.data.forEach(d => {
@@ -81,43 +83,46 @@ class Home extends Component {
 
     return (
       <Card bordered={false}>
-        <Form inline className="chart-header">
-          <Form.Item>
+        <Row className="chart-header">
+          <Col span={6}>
             <Cascader
               size="small"
               value={symbol}
               allowClear={false}
               expandTrigger="hover"
               options={client.symbols}
+              displayRender={displayRender}
               onChange={this.onSymbolChange}
             />
-          </Form.Item>
-          <Form.Item>
-            <Radio.Group
-              size="small"
-              defaultValue={String(period)}
-              onChange={this.onPeriodChange}
-            >
-              <Radio.Button value="60">M</Radio.Button>
-              <Radio.Button value="300">5M</Radio.Button>
-              <Radio.Button value="900">15M</Radio.Button>
-              <Radio.Button value="1800">30M</Radio.Button>
-              <Radio.Button value="3600">H</Radio.Button>
-              <Radio.Button value="28800">8H</Radio.Button>
-              <Radio.Button value="86400">D</Radio.Button>
-            </Radio.Group>
-          </Form.Item>
-        </Form>
-        <Spin spinning={client.loading}>
+          </Col>
+          <Col span={18} style={{ textAlign: 'right' }}>
+            <Tooltip title="Change Period" placement="left">
+              <Radio.Group
+                size="small"
+                defaultValue={String(period)}
+                onChange={this.onPeriodChange}
+              >
+                <Radio.Button value="60">M</Radio.Button>
+                <Radio.Button value="300">5M</Radio.Button>
+                <Radio.Button value="900">15M</Radio.Button>
+                <Radio.Button value="1800">30M</Radio.Button>
+                <Radio.Button value="3600">H</Radio.Button>
+                <Radio.Button value="28800">8H</Radio.Button>
+                <Radio.Button value="86400">D</Radio.Button>
+              </Radio.Group>
+            </Tooltip>
+          </Col>
+        </Row>
+        <Spin size="large" spinning={client.loading}>
           {data.length > 0
           ? <StockChart
               data={data}
               symbol={symbol}
               period={period}
               timeRange={client.timeRange}
-              height={innerHeight - 100}
+              height={innerHeight - 128}
             />
-          : 'No data!'}
+          : <div><br /><br /><br /><br /><br /></div>}
         </Spin>
       </Card>
     );

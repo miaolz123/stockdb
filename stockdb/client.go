@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"net/http"
 
+	"github.com/hprose/hprose-golang/io"
 	"github.com/hprose/hprose-golang/rpc"
 )
 
@@ -96,6 +97,19 @@ type Client struct {
 	GetTimeRange func(opt Option) TimeRangeResponse
 	GetOHLCs     func(opt Option) OHLCResponse
 	GetDepth     func(opt Option) DepthResponse
+}
+
+func init() {
+	io.Register(Option{}, "Option", "json")
+	io.Register(Ticker{}, "Ticker", "json")
+	io.Register(OHLC{}, "OHLC", "json")
+	io.Register(OrderBook{}, "OrderBook", "json")
+	io.Register(Depth{}, "Depth", "json")
+	io.Register(BaseResponse{}, "BaseResponse", "json")
+	io.Register(StringsResponse{}, "StringsResponse", "json")
+	io.Register(TimeRangeResponse{}, "TimeRangeResponse", "json")
+	io.Register(OHLCResponse{}, "OHLCResponse", "json")
+	io.Register(DepthResponse{}, "DepthResponse", "json")
 }
 
 // New can create a StockDB Client

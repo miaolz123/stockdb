@@ -103,7 +103,7 @@ class App extends Component {
             </div>
           </aside>
           <div className="ant-layout-main">
-            <div className="ant-layout-container" style={{minHeight: innerHeight - 65}}>
+            <div className="ant-layout-container" style={{minHeight: innerHeight - 80}}>
               <div className="ant-layout-content">
                 {children}
               </div>

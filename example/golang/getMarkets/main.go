@@ -12,5 +12,7 @@ func main() {
 	if len(resp.Data) > 0 {
 		fmt.Printf("Markets: %+v\n", resp.Data)
 		fmt.Printf("Symbols of %s: %+v\n", resp.Data[0], cli.GetSymbols(resp.Data[0]).Data)
+	} else {
+		fmt.Printf("GetMarkets error: %+v\n", resp)
 	}
 }

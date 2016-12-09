@@ -127,7 +127,7 @@ func (driver *influxdb) putMarket(market string) (resp response) {
 		resp.Message = err.Error()
 		return
 	}
-	q := client.NewQuery("CREATE DATABASE market_"+market, "", "")
+	q := client.NewQuery(fmt.Sprintf(`CREATE DATABASE "market_%s"`, market), "", "")
 	if response, err := driver.client.Query(q); err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -364,7 +364,7 @@ func (driver *influxdb) result2ohlc(result client.Result, opt stockdb.Option) (d
 // GetOHLC get OHLC records
 func (driver *influxdb) GetOHLCs(opt stockdb.Option) (resp response) {
 	if err := driver.check(); err != nil {
-		log(logError, err)
+		log(logError, 367, err)
 		resp.Message = err.Error()
 		return
 	}
@@ -388,8 +388,8 @@ func (driver *influxdb) GetOHLCs(opt stockdb.Option) (resp response) {
 	} else if len(response.Results) > 0 {
 		result := response.Results[0]
 		if result.Err != "" {
-			log(logError, response.Err)
-			resp.Message = response.Err
+			log(logError, result.Err)
+			resp.Message = result.Err
 			return
 		}
 		resp.Data = driver.result2ohlc(result, opt)
@@ -484,8 +484,8 @@ func (driver *influxdb) GetDepth(opt stockdb.Option) (resp response) {
 	} else if len(response.Results) > 0 {
 		result := response.Results[0]
 		if result.Err != "" {
-			log(logError, response.Err)
-			resp.Message = response.Err
+			log(logError, result.Err)
+			resp.Message = result.Err
 			return
 		}
 		resp.Data = driver.result2depth(result, opt)

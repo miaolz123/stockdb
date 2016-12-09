@@ -12,8 +12,8 @@ import (
 const (
 	uri    = "http://localhost:8765"
 	auth   = "username:password"
-	market = "okcoin_cn"
-	symbol = "BTC_CNY"
+	market = "okcoin.cn"
+	symbol = "BTC/CNY"
 	period = "1min"
 )
 

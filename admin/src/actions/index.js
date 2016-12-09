@@ -113,18 +113,20 @@ export function getOHLCs(symbol, period) {
     }
 
     const client = StockDB.New(server, window.atob(token));
-    const opt = { Market: symbol[0], Symbol: symbol[1], Period: period, InvalidPolicy: 'ibid' };
+    const opt = { Market: symbol[0], Symbol: symbol[1], Period: period };
 
-    client.GetOHLCs(opt, (resp) => {
-      if (resp.Success) {
-        dispatch(getTimeRange(opt));
-        dispatch(getOHLCsSuccess(resp.Data));
-      } else {
-        dispatch(requestFailure(resp.Message));
-      }
-    }, (name, err) => {
-      dispatch(requestFailure('Server error'));
-    });
+    if (opt.Market !== '') {
+      client.GetOHLCs(opt, (resp) => {
+        if (resp.Success) {
+          dispatch(getTimeRange(opt));
+          dispatch(getOHLCsSuccess(resp.Data));
+        } else {
+          dispatch(requestFailure(resp.Message));
+        }
+      }, (name, err) => {
+        dispatch(requestFailure('Server error'));
+      });
+    }
   };
 }
 
