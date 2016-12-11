@@ -9,7 +9,6 @@ ENV INFLUXDB_VERSION 1.1.1
 RUN wget -q https://dl.influxdata.com/influxdb/releases/influxdb_${INFLUXDB_VERSION}_amd64.deb.asc && \
     wget -q https://dl.influxdata.com/influxdb/releases/influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     wget -q https://github.com/miaolz123/stockdb/releases/download/v${STOCKDB_VERSION}/stockdb_linux_amd64.tar.gz && \
-    mkdir -p /etc/influxdb && \
     mkdir -p /usr/src/stockdb && \
     tar -C /usr/src/stockdb -xzf stockdb_linux_amd64.tar.gz && \
     chmod +x /usr/src/stockdb/stockdb && \
@@ -17,7 +16,6 @@ RUN wget -q https://dl.influxdata.com/influxdb/releases/influxdb_${INFLUXDB_VERS
     gpg --batch --verify influxdb_${INFLUXDB_VERSION}_amd64.deb.asc influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     dpkg -i influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     rm -f influxdb_${INFLUXDB_VERSION}_amd64.deb*
-COPY influxdb.conf /etc/influxdb/influxdb.conf
 
 EXPOSE 8765
 
