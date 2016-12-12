@@ -1,5 +1,7 @@
 FROM buildpack-deps:jessie-curl
 
+MAINTAINER <miaolizhao@126.com>
+
 RUN gpg \
     --keyserver hkp://ha.pool.sks-keyservers.net \
     --recv-keys 05CE15085FC09D18E99EFB22684A14CF2582E0C5
@@ -16,9 +18,11 @@ RUN wget -q https://dl.influxdata.com/influxdb/releases/influxdb_${INFLUXDB_VERS
     gpg --batch --verify influxdb_${INFLUXDB_VERSION}_amd64.deb.asc influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     dpkg -i influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     rm -f influxdb_${INFLUXDB_VERSION}_amd64.deb*
+    rm -f stockdb_linux_amd64.tar.gz
 
 EXPOSE 8765
 
 VOLUME /var/lib/influxdb
 
-CMD ["influxd", "&", "&&", "stockdb", "-conf", "/usr/src/stockdb/stockdb.ini"]
+COPY cmd.sh /cmd.sh
+CMD ["/cmd.sh"]
