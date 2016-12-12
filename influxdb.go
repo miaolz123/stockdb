@@ -48,7 +48,7 @@ func newInfluxdb() Driver {
 // reconnect the client
 func (driver *influxdb) reconnect() {
 	for {
-		time.Sleep(10 * time.Minute)
+		time.Sleep(1 * time.Minute)
 		var err error
 		if driver.client, err = client.NewHTTPClient(client.HTTPConfig{
 			Addr:     config["influxdb.host"],
@@ -62,6 +62,7 @@ func (driver *influxdb) reconnect() {
 			}
 		}
 		log(logError, "Influxdb reconnect error: ", err)
+		time.Sleep(9 * time.Minute)
 	}
 }
 

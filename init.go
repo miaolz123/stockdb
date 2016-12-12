@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	version = "0.0.1"
+	version         = "0.1.1"
+	minPeriod int64 = 3
 )
 
 func init() {
