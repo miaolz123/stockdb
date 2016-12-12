@@ -21,4 +21,4 @@ EXPOSE 8765
 
 VOLUME /var/lib/influxdb
 
-CMD ["influxd", "&", "&&", "stockdb" "-conf", "/usr/src/stockdb/stockdb.ini"]
+CMD ["influxd", "&", "&&", "stockdb", "-conf", "/usr/src/stockdb/stockdb.ini"]
