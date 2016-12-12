@@ -1,5 +1,6 @@
 ## StockDB
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/miaolz123/stockdb)](https://goreportcard.com/report/github.com/miaolz123/stockdb)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mashape/kong.svg)](https://hub.docker.com/r/stockdb/stockdb/)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/miaolz123/stockdb)
 
