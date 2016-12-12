@@ -17,7 +17,7 @@ RUN wget -q https://dl.influxdata.com/influxdb/releases/influxdb_${INFLUXDB_VERS
     cp -a /usr/src/stockdb/stockdb /usr/bin/ && \
     gpg --batch --verify influxdb_${INFLUXDB_VERSION}_amd64.deb.asc influxdb_${INFLUXDB_VERSION}_amd64.deb && \
     dpkg -i influxdb_${INFLUXDB_VERSION}_amd64.deb && \
-    rm -f influxdb_${INFLUXDB_VERSION}_amd64.deb*
+    rm -f influxdb_${INFLUXDB_VERSION}_amd64.deb* && \
     rm -f stockdb_linux_amd64.tar.gz
 
 EXPOSE 8765
