@@ -1,5 +1,6 @@
 package stockdb
 
+// Period constant
 const (
 	Second  int64 = 1
 	Minute  int64 = 60 * Second
