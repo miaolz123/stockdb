@@ -405,7 +405,7 @@ func (driver *influxdb) getDepthQuery(opt stockdb.Option) (q client.Query) {
 	if opt.BeginTime <= 0 || opt.BeginTime > ranges[1] {
 		opt.BeginTime = ranges[1]
 	}
-	raw := fmt.Sprintf(`SELECT price, amount FROM "symbol_%v" WHERE time >= %vs AND
+	raw := fmt.Sprintf(`SELECT price, amount, type FROM "symbol_%v" WHERE time >= %vs AND
 		time <= %vs LIMIT 300`, opt.Symbol, opt.BeginTime, opt.BeginTime+opt.Period)
 	q = client.NewQuery(raw, "market_"+opt.Market, "s")
 	return q
@@ -423,6 +423,9 @@ func (driver *influxdb) result2depth(result client.Result, opt stockdb.Option) (
 			volume float64
 		}{}
 		for i := range serie.Values {
+			if _type := fmt.Sprint(serie.Values[i][2]); _type == "high" || _type == "low" {
+				continue
+			}
 			price := conver.Float64Must(serie.Values[i][1])
 			if d.open == 0.0 {
 				d.open = price

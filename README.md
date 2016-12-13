@@ -1,6 +1,6 @@
 ## StockDB
 
-[![GitHub tag](https://img.shields.io/github/tag/miaolz123/stockdb.svg)](https://github.com/miaolz123/stockdb/releases)
+[![GitHub release](https://img.shields.io/github/release/miaolz123/stockdb.svg)](https://github.com/miaolz123/stockdb/releases)
 [![Travis](https://img.shields.io/travis/miaolz123/stockdb.svg)](https://travis-ci.org/miaolz123/stockdb)
 [![Go Report Card](https://goreportcard.com/badge/github.com/miaolz123/stockdb)](https://goreportcard.com/report/github.com/miaolz123/stockdb)
 [![Github All Releases](https://img.shields.io/github/downloads/miaolz123/stockdb/total.svg)](https://github.com/miaolz123/stockdb/releases)

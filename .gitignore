@@ -24,5 +24,7 @@ _testmain.go
 *.prof
 
 # Personal
+*.zip
+*.tar.gz
 .vscode
 custom.ini
