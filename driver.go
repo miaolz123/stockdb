@@ -10,6 +10,7 @@ type Driver interface {
 
 	PutOHLC(datum stockdb.OHLC, opt stockdb.Option) response
 	PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) response
+	GetStats() response
 	GetMarkets() response
 	GetSymbols(market string) response
 	GetTimeRange(opt stockdb.Option) response

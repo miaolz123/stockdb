@@ -57,6 +57,9 @@ class App extends Component {
       case 'home':
         browserHistory.push('/');
         break;
+      case 'chart':
+        browserHistory.push('/chart');
+        break;
       case 'logout':
         Modal.confirm({
           title: 'Are you sure to log out ?',
@@ -92,7 +95,10 @@ class App extends Component {
               mode="inline"
             >
               <Menu.Item key="home">
-                <Icon name="tachometer" fixedWidth size={collapse ? '2x' : undefined} /><span className="nav-text">Trader</span>
+                <Icon name="tachometer" fixedWidth size={collapse ? '2x' : undefined} /><span className="nav-text">Stats</span>
+              </Menu.Item>
+              <Menu.Item key="chart">
+                <Icon name="area-chart" fixedWidth size={collapse ? '2x' : undefined} /><span className="nav-text">Chart</span>
               </Menu.Item>
               <Menu.Item key="logout">
                 <Icon name="power-off" fixedWidth size={collapse ? '2x' : undefined} /><span className="nav-text">logout</span>

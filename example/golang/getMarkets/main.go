@@ -8,6 +8,7 @@ import (
 
 func main() {
 	cli := stockdb.New("http://localhost:8765", "username:password")
+	fmt.Printf("%+v\n", cli.GetStats())
 	resp := cli.GetMarkets()
 	if len(resp.Data) > 0 {
 		fmt.Printf("Markets: %+v\n", resp.Data)

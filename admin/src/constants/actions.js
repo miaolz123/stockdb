@@ -10,6 +10,10 @@ export const LOGOUT = 'LOGOUT';
 // requestFailure
 export const REQUEST_FAILURE = 'REQUEST_FAILURE';
 
+// getStats
+export const GET_STATS_REQUEST = 'GET_STATS_REQUEST';
+export const GET_STATS_SUCCESS = 'GET_STATS_SUCCESS';
+
 // getSymbols
 export const GET_SYMBOLS_REQUEST = 'GET_SYMBOLS_REQUEST';
 export const GET_MARKETS_SUCCESS = 'GET_MARKETS_SUCCESS';

@@ -56,6 +56,20 @@ type BaseResponse struct {
 	Data    interface{} `json:"Data"`
 }
 
+// Stats is stats struct
+type Stats struct {
+	Market string `json:"Market"`
+	Record int64  `json:"Record"`
+	Disk   int64  `json:"Disk"`
+}
+
+// StatsResponse is Stats response struct
+type StatsResponse struct {
+	Success bool    `json:"Success"`
+	Message string  `json:"Message"`
+	Data    []Stats `json:"Data"`
+}
+
 // StringsResponse is Strings response struct
 type StringsResponse struct {
 	Success bool     `json:"Success"`
@@ -92,6 +106,7 @@ type Client struct {
 
 	PutOHLC      func(datum OHLC, opt Option) BaseResponse
 	PutOHLCs     func(data []OHLC, opt Option) BaseResponse
+	GetStats     func() StatsResponse
 	GetMarkets   func() StringsResponse
 	GetSymbols   func(market string) StringsResponse
 	GetTimeRange func(opt Option) TimeRangeResponse
@@ -106,6 +121,8 @@ func init() {
 	io.Register(OrderBook{}, "OrderBook", "json")
 	io.Register(Depth{}, "Depth", "json")
 	io.Register(BaseResponse{}, "BaseResponse", "json")
+	io.Register(Stats{}, "Stats", "json")
+	io.Register(StatsResponse{}, "StatsResponse", "json")
 	io.Register(StringsResponse{}, "StringsResponse", "json")
 	io.Register(TimeRangeResponse{}, "TimeRangeResponse", "json")
 	io.Register(OHLCResponse{}, "OHLCResponse", "json")

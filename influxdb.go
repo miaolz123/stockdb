@@ -218,6 +218,49 @@ func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp 
 	return
 }
 
+// GetStats return the stats of StockDB
+func (driver *influxdb) GetStats() (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	stats := make(map[string]stockdb.Stats)
+	q := client.NewQuery("SHOW STATS FOR 'shard'", "", "s")
+	if response, err := driver.client.Query(q); err == nil && response.Err == "" && len(response.Results) > 0 {
+		result := response.Results[0]
+		if result.Err == "" {
+			for _, series := range result.Series {
+				if strings.Contains(series.Tags["database"], "market_") {
+					market := strings.TrimPrefix(series.Tags["database"], "market_")
+					s := stats[market]
+					s.Market = market
+					s.Disk += conver.Int64Must(series.Values[0][0])
+					stats[market] = s
+				}
+			}
+		}
+	}
+	data := []stockdb.Stats{}
+	for _, s := range stats {
+		q := client.NewQuery("SELECT COUNT(price) FROM /symbol_/", "market_"+s.Market, "s")
+		if response, err := driver.client.Query(q); err == nil && response.Err == "" && len(response.Results) > 0 {
+			result := response.Results[0]
+			if result.Err == "" {
+				for _, series := range result.Series {
+					if series.Err == nil && len(series.Values) > 0 {
+						s.Record += conver.Int64Must(series.Values[0][1])
+					}
+				}
+			}
+		}
+		data = append(data, s)
+	}
+	resp.Data = data
+	resp.Success = true
+	return
+}
+
 // getTimeRange return the first and the last record time
 func (driver *influxdb) getTimeRange(opt stockdb.Option) (ranges [2]int64) {
 	params := [2]string{"FIRST", "LAST"}

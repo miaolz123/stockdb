@@ -4,6 +4,7 @@ import assign from 'lodash/assign';
 const CLIENT_INIT = {
   loading: false,
   message: '',
+  stats: [],
   symbols: [],
   timeRange: [0, 0],
   data: [],
@@ -27,6 +28,15 @@ function user(state = CLIENT_INIT, action) {
       return assign({}, state, {
         loading: false,
         message: action.message,
+      });
+    case actions.GET_STATS_REQUEST:
+      return assign({}, state, {
+        loading: true,
+      });
+    case actions.GET_STATS_SUCCESS:
+      return assign({}, state, {
+        loading: false,
+        stats: action.stats,
       });
     case actions.GET_SYMBOLS_REQUEST:
       return assign({}, state, {

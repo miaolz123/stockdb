@@ -17,6 +17,40 @@ function requestFailure(message) {
   return { type: actions.REQUEST_FAILURE, message };
 }
 
+// getStats
+export function getStats() {
+  return (dispatch, getState) => {
+    const server = localStorage.getItem('server');
+    const token = localStorage.getItem('token');
+
+    dispatch(getStatsRequest());
+    if (!server || !token) {
+      dispatch(logout());
+      return;
+    }
+
+    const client = StockDB.New(server, window.atob(token));
+
+    client.GetStats((resp) => {
+      if (resp.Success) {
+        dispatch(getStatsSuccess(resp.Data));
+      } else {
+        dispatch(requestFailure(resp.Message));
+      }
+    }, (name, err) => {
+      dispatch(requestFailure('Server error'));
+    });
+  };
+}
+
+function getStatsRequest() {
+  return { type: actions.GET_STATS_REQUEST };
+}
+
+function getStatsSuccess(stats) {
+  return { type: actions.GET_STATS_SUCCESS, stats };
+}
+
 // getSymbols
 export function getSymbols() {
   return (dispatch, getState) => {
