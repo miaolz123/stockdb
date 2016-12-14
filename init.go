@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	version         = "0.1.2"
+	version         = "0.1.4"
 	minPeriod int64 = 3
 )
 

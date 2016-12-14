@@ -248,7 +248,7 @@ func (driver *influxdb) GetStats() (resp response) {
 			result := response.Results[0]
 			if result.Err == "" {
 				for _, series := range result.Series {
-					if series.Err == nil && len(series.Values) > 0 {
+					if len(series.Values) > 0 {
 						s.Record += conver.Int64Must(series.Values[0][1])
 					}
 				}
