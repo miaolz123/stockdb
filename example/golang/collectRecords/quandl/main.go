@@ -64,6 +64,7 @@ func fetch(opt stockdb.Option) {
 			if len(ohlcs) > 0 {
 				queue := len(ohlcs) / 500
 				for i := 0; i <= queue; i++ {
+					time.Sleep(10 * time.Second)
 					begin := 500 * i
 					end := begin + 500
 					if end > len(ohlcs) {
@@ -75,7 +76,6 @@ func fetch(opt stockdb.Option) {
 					} else {
 						log.Println("PutOHLCs successfully")
 					}
-					time.Sleep(30 * time.Second)
 				}
 			}
 		}
