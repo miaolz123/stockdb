@@ -3,15 +3,18 @@ package main
 import (
 	"encoding/base64"
 	"strings"
+	"time"
 
 	"github.com/go-ini/ini"
 	"github.com/miaolz123/stockdb/stockdb"
 )
 
 type logConfig struct {
-	Enable  bool `ini:"-"`
-	Console bool `ini:"console"`
-	File    bool `ini:"file"`
+	Enable   bool           `ini:"-"`
+	Timezone string         `ini:"timezone"`
+	Console  bool           `ini:"console"`
+	File     bool           `ini:"file"`
+	Location *time.Location `ini:"-"`
 }
 
 var (
@@ -31,6 +34,11 @@ func loadConfig(path string) {
 	}
 	conf.Section("log").MapTo(&logConf)
 	logConf.Enable = logConf.Console || logConf.File
+	if loc, err := time.LoadLocation(logConf.Timezone); err != nil || loc == nil {
+		logConf.Location = time.Local
+	} else {
+		logConf.Location = loc
+	}
 	conf.Section("default").MapTo(&defaultOption)
 	if defaultOption.Period < minPeriod {
 		defaultOption.Period = minPeriod

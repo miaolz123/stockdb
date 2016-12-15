@@ -18,15 +18,6 @@ type Option struct {
 	InvalidPolicy string `json:"InvalidPolicy" ini:"InvalidPolicy"`
 }
 
-// Ticker is an order record struct
-type Ticker struct {
-	ID     string  `json:"ID"`
-	Time   int64   `json:"Time"`
-	Price  float64 `json:"Price"`
-	Amount float64 `json:"Amount"`
-	Type   string  `json:"Type"`
-}
-
 // OHLC is a candlestick struct
 type OHLC struct {
 	Time   int64   `json:"Time"`
@@ -35,6 +26,15 @@ type OHLC struct {
 	Low    float64 `json:"Low"`
 	Close  float64 `json:"Close"`
 	Volume float64 `json:"Volume"`
+}
+
+// Order is an order record struct
+type Order struct {
+	ID     string  `json:"ID"`
+	Time   int64   `json:"Time"`
+	Price  float64 `json:"Price"`
+	Amount float64 `json:"Amount"`
+	Type   string  `json:"Type"`
 }
 
 // OrderBook struct
@@ -106,6 +106,8 @@ type Client struct {
 
 	PutOHLC      func(datum OHLC, opt Option) BaseResponse
 	PutOHLCs     func(data []OHLC, opt Option) BaseResponse
+	PutOrder     func(datum Order, opt Option) BaseResponse
+	PutOrders    func(data []Order, opt Option) BaseResponse
 	GetStats     func() StatsResponse
 	GetMarkets   func() StringsResponse
 	GetSymbols   func(market string) StringsResponse
@@ -116,8 +118,8 @@ type Client struct {
 
 func init() {
 	io.Register(Option{}, "Option", "json")
-	io.Register(Ticker{}, "Ticker", "json")
 	io.Register(OHLC{}, "OHLC", "json")
+	io.Register(Order{}, "Order", "json")
 	io.Register(OrderBook{}, "OrderBook", "json")
 	io.Register(Depth{}, "Depth", "json")
 	io.Register(BaseResponse{}, "BaseResponse", "json")

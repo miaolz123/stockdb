@@ -53,6 +53,8 @@ func server() {
 		[]string{
 			"PutOHLC",
 			"PutOHLCs",
+			"PutOrder",
+			"PutOrders",
 			"GetStats",
 			"GetMarkets",
 			"GetSymbols",

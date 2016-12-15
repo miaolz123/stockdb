@@ -80,8 +80,29 @@ func (driver *influxdb) check() error {
 	return nil
 }
 
-// record2BatchPoints parse struct from OHLC to BatchPoints
-func (driver *influxdb) record2BatchPoints(data []stockdb.OHLC, opt stockdb.Option) (bp client.BatchPoints, err error) {
+// putMarket create a new market to stockdb
+func (driver *influxdb) putMarket(market string) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	q := client.NewQuery(fmt.Sprintf(`CREATE DATABASE "market_%s"`, market), "", "")
+	if response, err := driver.client.Query(q); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	} else if err = response.Error(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	resp.Success = true
+	return
+}
+
+// records2BatchPoints parse struct from OHLC to BatchPoints
+func (driver *influxdb) records2BatchPoints(data []stockdb.OHLC, opt stockdb.Option) (bp client.BatchPoints, err error) {
 	if driver.status < 1 {
 		err = errInfluxdbNotConnected
 		return
@@ -121,28 +142,7 @@ func (driver *influxdb) record2BatchPoints(data []stockdb.OHLC, opt stockdb.Opti
 	return
 }
 
-// putMarket create a new market to stockdb
-func (driver *influxdb) putMarket(market string) (resp response) {
-	if err := driver.check(); err != nil {
-		log(logError, err)
-		resp.Message = err.Error()
-		return
-	}
-	q := client.NewQuery(fmt.Sprintf(`CREATE DATABASE "market_%s"`, market), "", "")
-	if response, err := driver.client.Query(q); err != nil {
-		log(logError, err)
-		resp.Message = err.Error()
-		return
-	} else if err = response.Error(); err != nil {
-		log(logError, err)
-		resp.Message = err.Error()
-		return
-	}
-	resp.Success = true
-	return
-}
-
-// PutOHLC add a OHLC record to stockdb
+// PutOHLC add an OHLC record to stockdb
 func (driver *influxdb) PutOHLC(datum stockdb.OHLC, opt stockdb.Option) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
@@ -158,7 +158,7 @@ func (driver *influxdb) PutOHLC(datum stockdb.OHLC, opt stockdb.Option) (resp re
 	if opt.Period < minPeriod {
 		opt.Period = defaultOption.Period
 	}
-	bp, err := driver.record2BatchPoints([]stockdb.OHLC{datum}, opt)
+	bp, err := driver.records2BatchPoints([]stockdb.OHLC{datum}, opt)
 	if err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -180,7 +180,7 @@ func (driver *influxdb) PutOHLC(datum stockdb.OHLC, opt stockdb.Option) (resp re
 	return
 }
 
-// PutOHLC add a OHLC record to stockdb
+// PutOHLCs add OHLC records to stockdb
 func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp response) {
 	if err := driver.check(); err != nil {
 		log(logError, err)
@@ -196,7 +196,7 @@ func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp 
 	if opt.Period < minPeriod {
 		opt.Period = defaultOption.Period
 	}
-	bp, err := driver.record2BatchPoints(data, opt)
+	bp, err := driver.records2BatchPoints(data, opt)
 	if err != nil {
 		log(logError, err)
 		resp.Message = err.Error()
@@ -207,6 +207,108 @@ func (driver *influxdb) PutOHLCs(data []stockdb.OHLC, opt stockdb.Option) (resp 
 			resp = driver.putMarket(opt.Market)
 			if resp.Success {
 				return driver.PutOHLCs(data, opt)
+			}
+			return
+		}
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	resp.Success = true
+	return
+}
+
+// orders2BatchPoints parse struct from Order to BatchPoints
+func (driver *influxdb) orders2BatchPoints(data []stockdb.Order, opt stockdb.Option) (bp client.BatchPoints, err error) {
+	if driver.status < 1 {
+		err = errInfluxdbNotConnected
+		return
+	}
+	bp, err = client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  "market_" + opt.Market,
+		Precision: "s",
+	})
+	if err != nil {
+		return
+	}
+	for _, datum := range data {
+		tag := map[string]string{
+			"id":   datum.ID,
+			"type": datum.Type,
+		}
+		field := map[string]interface{}{
+			"period": 0,
+			"price":  datum.Price,
+			"amount": datum.Amount,
+		}
+		pt, err := client.NewPoint("symbol_"+opt.Symbol, tag, field, time.Unix(datum.Time, 0))
+		if err != nil {
+			return bp, err
+		}
+		bp.AddPoint(pt)
+	}
+	return
+}
+
+// PutOrder add an order record to stockdb
+func (driver *influxdb) PutOrder(datum stockdb.Order, opt stockdb.Option) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	if opt.Market == "" {
+		opt.Market = defaultOption.Market
+	}
+	if opt.Symbol == "" {
+		opt.Symbol = defaultOption.Symbol
+	}
+	bp, err := driver.orders2BatchPoints([]stockdb.Order{datum}, opt)
+	if err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	if err := driver.client.Write(bp); err != nil {
+		if strings.Contains(err.Error(), "database not found") {
+			resp = driver.putMarket(opt.Market)
+			if resp.Success {
+				return driver.PutOrder(datum, opt)
+			}
+			return
+		}
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	resp.Success = true
+	return
+}
+
+// PutOrders add order records to stockdb
+func (driver *influxdb) PutOrders(data []stockdb.Order, opt stockdb.Option) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	if opt.Market == "" {
+		opt.Market = defaultOption.Market
+	}
+	if opt.Symbol == "" {
+		opt.Symbol = defaultOption.Symbol
+	}
+	bp, err := driver.orders2BatchPoints(data, opt)
+	if err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	if err := driver.client.Write(bp); err != nil {
+		if strings.Contains(err.Error(), "database not found") {
+			resp = driver.putMarket(opt.Market)
+			if resp.Success {
+				return driver.PutOrders(data, opt)
 			}
 			return
 		}
