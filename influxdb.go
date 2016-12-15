@@ -232,6 +232,9 @@ func (driver *influxdb) orders2BatchPoints(data []stockdb.Order, opt stockdb.Opt
 		return
 	}
 	for _, datum := range data {
+		if datum.ID == "" {
+			datum.ID = fmt.Sprint(datum.Type, datum.Amount, "@", datum.Price)
+		}
 		tag := map[string]string{
 			"id":   datum.ID,
 			"type": datum.Type,

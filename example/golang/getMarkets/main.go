@@ -10,10 +10,7 @@ func main() {
 	cli := stockdb.New("http://localhost:8765", "username:password")
 	fmt.Printf("%+v\n", cli.GetStats())
 	resp := cli.GetMarkets()
-	if len(resp.Data) > 0 {
-		fmt.Printf("Markets: %+v\n", resp.Data)
-		fmt.Printf("Symbols of %s: %+v\n", resp.Data[0], cli.GetSymbols(resp.Data[0]).Data)
-	} else {
-		fmt.Printf("GetMarkets error: %+v\n", resp)
+	for _, market := range resp.Data {
+		fmt.Printf("Symbols of %s: %+v\n", market, cli.GetSymbols(market).Data)
 	}
 }
