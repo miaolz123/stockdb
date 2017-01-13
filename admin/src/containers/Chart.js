@@ -1,4 +1,4 @@
-import { getOHLCs } from '../actions';
+import { getOHLCs, getPeriodRange } from '../actions';
 import StockChart from '../components/StockChart';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
@@ -15,6 +15,7 @@ class Chart extends Component {
 
     this.symbol = ['', ''];
     this.period = 60;
+    this.periods = [];
 
     this.refresh = this.refresh.bind(this);
     this.onSymbolChange = this.onSymbolChange.bind(this);
@@ -24,12 +25,31 @@ class Chart extends Component {
   componentWillReceiveProps(nextProps) {
     const { client } = nextProps;
     const newSymbol = [];
+    const periodNums = [60, 300, 900, 1800, 3600, 28800, 86400, 604800, 2592000, 31536000];
+    const periodStrs = ['M', '5M', '15M', '30M', 'H', '8H', 'D', 'W', 'MONTH', 'YEAR'];
 
     if (this.symbol[0] === '' && client.symbols.length > 0) {
       newSymbol.push(client.symbols[0].value);
       if (client.symbols[0].children.length > 0) {
         newSymbol.push(client.symbols[0].children[0].value);
         this.symbol = newSymbol;
+        this.refresh();
+      }
+    }
+
+    if (client.periodRange && client.periodRange[1] > client.periodRange[0]) {
+      this.periods = [];
+      periodNums.forEach((p, i) => {
+        if (p >= client.periodRange[0] && p < client.periodRange[1]) {
+          this.periods.push({
+            key: String(p),
+            value: periodStrs[i],
+          });
+        }
+      });
+
+      if (this.periods.length > 0 && (this.period < client.periodRange[0] || this.period >= client.periodRange[1])) {
+        this.period = Number(this.periods[0].key);
         this.refresh();
       }
     }
@@ -43,6 +63,7 @@ class Chart extends Component {
     const { dispatch } = this.props;
     const { symbol, period } = this;
 
+    dispatch(getPeriodRange(symbol));
     dispatch(getOHLCs(symbol, period));
   }
 
@@ -60,7 +81,7 @@ class Chart extends Component {
     const { client } = this.props;
     const { innerHeight, innerWidth } = this.state;
     const klineAmount = parseInt(innerWidth / 10, 10);
-    const { symbol, period } = this;
+    const { symbol, period, periods } = this;
     const data = [];
     const displayRender = symbol => `${symbol[1]} @ ${symbol[0]}`;
 
@@ -96,25 +117,21 @@ class Chart extends Component {
             />
           </Col>
           <Col span={18} style={{ textAlign: 'right' }}>
-            <Tooltip title="Change Period" placement="left">
-              <Radio.Group
-                size="small"
-                defaultValue={String(period)}
-                onChange={this.onPeriodChange}
-              >
-                <Radio.Button value="60">M</Radio.Button>
-                <Radio.Button value="300">5M</Radio.Button>
-                <Radio.Button value="900">15M</Radio.Button>
-                <Radio.Button value="1800">30M</Radio.Button>
-                <Radio.Button value="3600">H</Radio.Button>
-                <Radio.Button value="28800">8H</Radio.Button>
-                <Radio.Button value="86400">D</Radio.Button>
-              </Radio.Group>
-            </Tooltip>
+            {periods.length > 0 &&
+              <Tooltip title="Change Period" placement="left">
+                <Radio.Group
+                  size="small"
+                  value={String(period)}
+                  onChange={this.onPeriodChange}
+                >
+                  { periods.map(p => <Radio.Button key={p.key} value={p.key}>{p.value}</Radio.Button>) }
+                </Radio.Group>
+              </Tooltip>
+            }
           </Col>
         </Row>
         <Spin size="large" spinning={client.loading}>
-          {data.length > 0
+          {data.length > 0 && period > 0
           ? <StockChart
               data={data}
               symbol={symbol}

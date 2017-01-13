@@ -16,6 +16,7 @@ type Driver interface {
 	GetMarkets() response
 	GetSymbols(market string) response
 	GetTimeRange(opt stockdb.Option) response
+	GetPeriodRange(opt stockdb.Option) response
 	GetOHLCs(opt stockdb.Option) response
 	GetDepth(opt stockdb.Option) response
 }

@@ -32,6 +32,10 @@
        multi-period OHLC record, market depth...
 ```
 
+## Admin Demo
+
+![](https://raw.githubusercontent.com/miaolz123/stockdb/master/resource/admin_chart.png)
+
 ## Instllation
 
 You can install StockDB from Docker, Binary or Source.
@@ -68,4 +72,4 @@ However, the [ISSUE](https://github.com/miaolz123/stockdb/issues) is welcome.
 
 ## License
 
-Copyright (c) 2016 [miaolz123](https://github.com/miaolz123) by MIT
+Copyright (c) 2017 [miaolz123](https://github.com/miaolz123) by MIT

@@ -62,7 +62,7 @@ func (driver *influxdb) reconnect() {
 			}
 		}
 		log(logError, "Influxdb reconnect error: ", err)
-		time.Sleep(9 * time.Minute)
+		time.Sleep(2 * time.Minute)
 	}
 }
 
@@ -450,6 +450,28 @@ func (driver *influxdb) GetTimeRange(opt stockdb.Option) (resp response) {
 		opt.Symbol = defaultOption.Symbol
 	}
 	resp.Data = driver.getTimeRange(opt)
+	resp.Success = true
+	return
+}
+
+// GetPeriodRange return the min and the max record period
+func (driver *influxdb) GetPeriodRange(opt stockdb.Option) (resp response) {
+	if err := driver.check(); err != nil {
+		log(logError, err)
+		resp.Message = err.Error()
+		return
+	}
+	data := [2]int64{0, 0}
+	q := client.NewQuery(fmt.Sprintf(`SELECT MIN("period") FROM "symbol_%v"`, opt.Symbol), "market_"+opt.Market, "s")
+	if response, err := driver.client.Query(q); err == nil && response.Err == "" && len(response.Results) > 0 {
+		result := response.Results[0]
+		if result.Err == "" && len(result.Series) > 0 && len(result.Series[0].Values) > 0 && len(result.Series[0].Values[0]) > 1 {
+			data[0] = conver.Int64Must(result.Series[0].Values[0][1])
+			ranges := driver.getTimeRange(opt)
+			data[1] = ranges[1] - ranges[0]
+		}
+	}
+	resp.Data = data
 	resp.Success = true
 	return
 }

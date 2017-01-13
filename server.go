@@ -59,6 +59,7 @@ func server() {
 			"GetMarkets",
 			"GetSymbols",
 			"GetTimeRange",
+			"GetPeriodRange",
 			"GetOHLCs",
 			"GetDepth",
 		},

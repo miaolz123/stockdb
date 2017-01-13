@@ -7,6 +7,7 @@ const CLIENT_INIT = {
   stats: [],
   symbols: [],
   timeRange: [0, 0],
+  periodRange: [0, 0],
   data: [],
 };
 
@@ -72,6 +73,15 @@ function user(state = CLIENT_INIT, action) {
       return assign({}, state, {
         loading: false,
         timeRange: action.timeRange,
+      });
+    case actions.GET_PERIOD_RANGE_REQUEST:
+      return assign({}, state, {
+        loading: true,
+      });
+    case actions.GET_PERIOD_RANGE_SUCCESS:
+      return assign({}, state, {
+        loading: false,
+        periodRange: action.periodRange,
       });
     case actions.GET_OHLCS_REQUEST:
       return assign({}, state, {

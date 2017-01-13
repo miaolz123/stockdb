@@ -134,6 +134,41 @@ function getTimeRangeSuccess(timeRange) {
   return { type: actions.GET_TIME_RANGE_SUCCESS, timeRange };
 }
 
+// getPeriodRange
+export function getPeriodRange(symbol) {
+  return (dispatch, getState) => {
+    const server = localStorage.getItem('server');
+    const token = localStorage.getItem('token');
+
+    dispatch(getPeriodRangeRequest());
+    if (!server || !token) {
+      dispatch(logout());
+      return;
+    }
+
+    const client = StockDB.New(server, window.atob(token));
+    const opt = { Market: symbol[0], Symbol: symbol[1] };
+
+    client.GetPeriodRange(opt, (resp) => {
+      if (resp.Success) {
+        dispatch(getPeriodRangeSuccess(resp.Data));
+      } else {
+        dispatch(requestFailure(resp.Message));
+      }
+    }, (name, err) => {
+      dispatch(requestFailure('Server error'));
+    });
+  };
+}
+
+function getPeriodRangeRequest() {
+  return { type: actions.GET_PERIOD_RANGE_REQUEST };
+}
+
+function getPeriodRangeSuccess(periodRange) {
+  return { type: actions.GET_PERIOD_RANGE_SUCCESS, periodRange };
+}
+
 // getOHLCs
 export function getOHLCs(symbol, period) {
   return (dispatch, getState) => {
@@ -149,7 +184,7 @@ export function getOHLCs(symbol, period) {
     const client = StockDB.New(server, window.atob(token));
     const opt = { Market: symbol[0], Symbol: symbol[1], Period: period };
 
-    if (opt.Market !== '') {
+    if (opt.Market !== '' && period > 0) {
       client.GetOHLCs(opt, (resp) => {
         if (resp.Success) {
           dispatch(getTimeRange(opt));

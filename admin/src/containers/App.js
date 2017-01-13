@@ -115,7 +115,7 @@ class App extends Component {
               </div>
             </div>
             <div className="ant-layout-footer">
-              <a href="https://github.com/miaolz123/stockdb">StockDB</a> © 2016
+              <a href="https://github.com/miaolz123/stockdb">StockDB</a> © 2017
             </div>
           </div>
         </div>

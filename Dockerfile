@@ -1,7 +1,7 @@
 FROM influxdb:1.1.1
 MAINTAINER <miaolizhao@126.com>
 
-ENV STOCKDB_VERSION 0.1.4
+ENV STOCKDB_VERSION 0.2.2
 RUN wget -q https://github.com/miaolz123/stockdb/releases/download/v${STOCKDB_VERSION}/stockdb_linux_amd64.tar.gz && \
     mkdir -p /usr/src/stockdb && \
     tar -C /usr/src/stockdb -xzf stockdb_linux_amd64.tar.gz && \

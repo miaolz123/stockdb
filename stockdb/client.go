@@ -104,16 +104,17 @@ type Client struct {
 	auth   string
 	Hprose *rpc.HTTPClient
 
-	PutOHLC      func(datum OHLC, opt Option) BaseResponse
-	PutOHLCs     func(data []OHLC, opt Option) BaseResponse
-	PutOrder     func(datum Order, opt Option) BaseResponse
-	PutOrders    func(data []Order, opt Option) BaseResponse
-	GetStats     func() StatsResponse
-	GetMarkets   func() StringsResponse
-	GetSymbols   func(market string) StringsResponse
-	GetTimeRange func(opt Option) TimeRangeResponse
-	GetOHLCs     func(opt Option) OHLCResponse
-	GetDepth     func(opt Option) DepthResponse
+	PutOHLC        func(datum OHLC, opt Option) BaseResponse
+	PutOHLCs       func(data []OHLC, opt Option) BaseResponse
+	PutOrder       func(datum Order, opt Option) BaseResponse
+	PutOrders      func(data []Order, opt Option) BaseResponse
+	GetStats       func() StatsResponse
+	GetMarkets     func() StringsResponse
+	GetSymbols     func(market string) StringsResponse
+	GetTimeRange   func(opt Option) TimeRangeResponse
+	GetPeriodRange func(opt Option) TimeRangeResponse
+	GetOHLCs       func(opt Option) OHLCResponse
+	GetDepth       func(opt Option) DepthResponse
 }
 
 func init() {
