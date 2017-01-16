@@ -14,7 +14,7 @@ func main() {
 		symbols := cli.GetSymbols(market).Data
 		fmt.Printf("Symbols of %s: %+v\n", market, symbols)
 		for _, symbol := range symbols {
-			fmt.Printf("MinPeriod of %s: %+v\n", symbol, cli.GetMinPeriod(stockdb.Option{
+			fmt.Printf("MinPeriod of %s: %+v\n", symbol, cli.GetPeriodRange(stockdb.Option{
 				Market: market,
 				Symbol: symbol,
 			}).Data)
