@@ -28,7 +28,15 @@ class Home extends Component {
     }, {
       title: 'Disk',
       dataIndex: 'Disk',
-      render: (t) => `${(t / 1024).toFixed(2)} KB`,
+      render: t => {
+        if (t < 1024) {
+          return `${t.toFixed(2)} B`;
+        } else if (t < 1024 * 1024) {
+          return `${(t / 1024).toFixed(2)} KB`;
+        } else {
+          return `${(t / 1024 / 1024).toFixed(2)} MB`;
+        }
+      },
     }, {
       title: 'Record',
       dataIndex: 'Record',

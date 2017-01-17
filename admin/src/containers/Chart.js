@@ -2,7 +2,10 @@ import { getOHLCs, getPeriodRange } from '../actions';
 import StockChart from '../components/StockChart';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Card, Row, Col, Cascader, Radio, Spin, Tooltip } from 'antd';
+import { Card, Row, Col, Cascader, Radio, Spin, Tooltip, DatePicker } from 'antd';
+import moment from 'moment';
+
+const { RangePicker } = DatePicker;
 
 class Chart extends Component {
   constructor(props) {
@@ -16,9 +19,11 @@ class Chart extends Component {
     this.symbol = ['', ''];
     this.period = 60;
     this.periods = [];
+    this.timeRange = [0, 0];
 
     this.refresh = this.refresh.bind(this);
     this.onSymbolChange = this.onSymbolChange.bind(this);
+    this.onTimeRangeChange = this.onTimeRangeChange.bind(this);
     this.onPeriodChange = this.onPeriodChange.bind(this);
   }
 
@@ -61,19 +66,30 @@ class Chart extends Component {
 
   refresh() {
     const { dispatch } = this.props;
-    const { symbol, period } = this;
+    const { symbol, period, timeRange } = this;
+    const beginTime = timeRange[0];
+    const endTime = timeRange[1];
 
+    this.timeRange = [0, 0];
     dispatch(getPeriodRange(symbol));
-    dispatch(getOHLCs(symbol, period));
+    dispatch(getOHLCs(symbol, period, beginTime, endTime));
   }
 
   onSymbolChange(symbol) {
     this.symbol = symbol;
+    this.timeRange = [0, 0];
+    this.refresh();
+  }
+
+  onTimeRangeChange(dates) {
+    this.timeRange[0] = Number(dates[0].format('X'));
+    this.timeRange[1] = Number(dates[1].format('X')) + 60 * 60 * 24;
     this.refresh();
   }
 
   onPeriodChange(e) {
     this.period = Number(e.target.value);
+    this.timeRange = [0, 0];
     this.refresh();
   }
 
@@ -84,6 +100,7 @@ class Chart extends Component {
     const { symbol, period, periods } = this;
     const data = [];
     const displayRender = symbol => `${symbol[1]} @ ${symbol[0]}`;
+    const defaultTimeRange = [client.timeRange[0], client.timeRange[1]];
 
     if (client.data) {
       client.data.forEach(d => {
@@ -96,10 +113,17 @@ class Chart extends Component {
           volume: d.Volume,
         });
       });
-    }
 
-    if (client.timeRange[1] > 0 && client.timeRange[1] - klineAmount * period > client.timeRange[0]) {
-      client.timeRange[0] = client.timeRange[1] - klineAmount * period;
+      if (!client.loading && client.data.length > 0) {
+        this.timeRange[0] = client.data[0].Time;
+        this.timeRange[1] = client.data[client.data.length - 1].Time;
+        defaultTimeRange[0] = this.timeRange[0];
+        defaultTimeRange[1] = this.timeRange[1];
+
+        if (defaultTimeRange[1] - klineAmount * period > defaultTimeRange[0]) {
+          defaultTimeRange[0] = defaultTimeRange[1] - klineAmount * period;
+        }
+      }
     }
 
     return (
@@ -116,7 +140,18 @@ class Chart extends Component {
               onChange={this.onSymbolChange}
             />
           </Col>
-          <Col span={18} style={{ textAlign: 'right' }}>
+          <Col span={8} style={{ textAlign: 'right' }}>
+            <RangePicker
+              size="small"
+              allowClear={false}
+              onChange={this.onTimeRangeChange}
+              value={[
+                moment(this.timeRange[0], 'X').set({'hour': 0, 'minute': 0, 'second': 0}),
+                moment(this.timeRange[1], 'X').set({'hour': 23, 'minute': 59, 'second': 59}),
+              ]}
+            />
+          </Col>
+          <Col span={10} style={{ textAlign: 'right' }}>
             {periods.length > 0 &&
               <Tooltip title="Change Period" placement="left">
                 <Radio.Group
@@ -136,7 +171,7 @@ class Chart extends Component {
               data={data}
               symbol={symbol}
               period={period}
-              timeRange={client.timeRange}
+              timeRange={defaultTimeRange}
               height={innerHeight - 128}
             />
           : <div><br /><br /><br /><br /><br /></div>}

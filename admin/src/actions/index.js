@@ -170,7 +170,7 @@ function getPeriodRangeSuccess(periodRange) {
 }
 
 // getOHLCs
-export function getOHLCs(symbol, period) {
+export function getOHLCs(symbol, period, beginTime, endTime) {
   return (dispatch, getState) => {
     const server = localStorage.getItem('server');
     const token = localStorage.getItem('token');
@@ -183,6 +183,14 @@ export function getOHLCs(symbol, period) {
 
     const client = StockDB.New(server, window.atob(token));
     const opt = { Market: symbol[0], Symbol: symbol[1], Period: period };
+
+    if (beginTime && beginTime > 0) {
+      opt.BeginTime = beginTime;
+
+      if (endTime && endTime > 0) {
+        opt.EndTime = endTime;
+      }
+    }
 
     if (opt.Market !== '' && period > 0) {
       client.GetOHLCs(opt, (resp) => {
